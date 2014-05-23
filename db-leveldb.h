@@ -6,13 +6,14 @@
 
 class DBLevelDB : public DB {
 public:
-	DBLevelDB(const std::string &mapdir);
+	DBLevelDB(const std::string &mapdir, bool no_load = 0);
 	virtual std::vector<BlockPos> getBlockPos();
 	virtual void getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zPos);
 	~DBLevelDB();
 private:
 	void loadPosCache();
 
+protected:
 	std::vector<BlockPos> posCache;
 
 	leveldb::DB *db;

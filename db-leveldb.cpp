@@ -28,7 +28,8 @@ DBLevelDB::DBLevelDB(const std::string &mapdir)
 		throw std::runtime_error(std::string("Failed to open Database: ") + status.ToString());
 	}
 
-	loadPosCache();
+	if(!no_load)
+		loadPosCache();
 }
 
 

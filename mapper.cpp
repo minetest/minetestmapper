@@ -34,7 +34,7 @@ void usage()
 			"  --noshading\n"
 			"  --min-y <y>\n"
 			"  --max-y <y>\n"
-			"  --backend <sqlite3/leveldb/redis>\n"
+			"  --backend <sqlite3/leveldb/leveldbfm/redis>\n"
 			"  --geometry x:y+w+h\n"
 			"Color format: '#000000'\n";
 	std::cout << usage_text;
