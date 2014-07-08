@@ -16,6 +16,7 @@
 #include "db-sqlite3.h"
 #if USE_LEVELDB
 #include "db-leveldb.h"
+#include "db-leveldbfm.h"
 #endif
 #if USE_REDIS
 #include "db-redis.h"
@@ -294,6 +295,8 @@ void TileGenerator::openDb(const std::string &input)
 #if USE_LEVELDB
 	else if(m_backend == "leveldb")
 		m_db = new DBLevelDB(input);
+	else if(m_backend == "leveldbfm")
+		m_db = new DBLevelDBFM(input);
 #endif
 #if USE_REDIS
 	else if(m_backend == "redis")

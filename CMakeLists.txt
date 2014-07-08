@@ -106,6 +106,7 @@ set(mapper_SRCS
 
 if(USE_LEVELDB)
 	set(mapper_SRCS ${mapper_SRCS} db-leveldb.cpp)
+	set(mapper_SRCS ${mapper_SRCS} db-leveldbfm.cpp)
 endif(USE_LEVELDB)
 
 if(USE_REDIS)
