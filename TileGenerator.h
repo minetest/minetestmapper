@@ -71,6 +71,7 @@ public:
 	void parseColorsFile(const std::string &fileName);
 	void setBackend(std::string backend);
 	void generate(const std::string &input, const std::string &output);
+	void setZoom(int zoom);
 
 private:
 	void parseColorsStream(std::istream &in);
@@ -89,6 +90,7 @@ private:
 	void printUnknown();
 	int getImageX(int val) const;
 	int getImageY(int val) const;
+	void setZoomed(gdImagePtr image, int x, int y, int color);
 
 private:
 	Color m_bgColor;
@@ -129,6 +131,7 @@ private:
 
 	int m_blockAirId;
 	int m_blockIgnoreId;
+	int m_zoom;
 }; // class TileGenerator
 
 #endif // TILEGENERATOR_HEADER
