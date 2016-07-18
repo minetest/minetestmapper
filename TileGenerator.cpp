@@ -36,7 +36,7 @@ static inline int rgb2int(uint8_t r, uint8_t g, uint8_t b, uint8_t a=0xFF)
 
 static inline int color2int(Color c)
 {
-    return rgb2int(c.r, c.g, c.b, c.a);
+	return rgb2int(c.r, c.g, c.b, c.a);
 }
 
 // rounds n (away from 0) to a multiple of f while preserving the sign of n
@@ -87,15 +87,15 @@ static inline int colorSafeBounds(int color)
 
 static inline Color mixColors(Color a, Color b)
 {
-    Color result;
-    double a1 = a.a / 255.0;
-    double a2 = b.a / 255.0;
+	Color result;
+	double a1 = a.a / 255.0;
+	double a2 = b.a / 255.0;
 
-    result.r = (int) (a1 * a.r + a2 * (1 - a1) * b.r);
-    result.g = (int) (a1 * a.g + a2 * (1 - a1) * b.g);
-    result.b = (int) (a1 * a.b + a2 * (1 - a1) * b.b);
-    result.a = (int) (255 * (a1 + a2 * (1 - a1)));
-    return result;
+	result.r = (int) (a1 * a.r + a2 * (1 - a1) * b.r);
+	result.g = (int) (a1 * a.g + a2 * (1 - a1) * b.g);
+	result.b = (int) (a1 * a.b + a2 * (1 - a1) * b.b);
+	result.a = (int) (255 * (a1 + a2 * (1 - a1)));
+	return result;
 }
 
 TileGenerator::TileGenerator():
@@ -121,7 +121,7 @@ TileGenerator::TileGenerator():
 	m_geomY(-2048),
 	m_geomX2(2048),
 	m_geomY2(2048),
-    m_zoom(1)
+	m_zoom(1)
 {
 }
 
@@ -151,9 +151,9 @@ void TileGenerator::setPlayerColor(const std::string &playerColor)
 
 void TileGenerator::setZoom(int zoom)
 {
-    if (zoom < 1) {
-        throw std::runtime_error("Zoom level needs to be a number: 1 or higher");
-    }
+	if (zoom < 1) {
+		throw std::runtime_error("Zoom level needs to be a number: 1 or higher");
+	}
 	m_zoom = zoom;
 }
 
@@ -195,7 +195,7 @@ void TileGenerator::setDrawScale(bool drawScale)
 
 void TileGenerator::setDrawAlpha(bool drawAlpha)
 {
-    m_drawAlpha = drawAlpha;
+	m_drawAlpha = drawAlpha;
 }
 
 void TileGenerator::setShading(bool shading)
@@ -532,7 +532,7 @@ inline void TileGenerator::renderMapBlock(const ustring &mapBlock, const BlockPo
 						else
 							m_color[z][x] = mixColors(m_color[z][x], c);
 						if(m_color[z][x].a == 0xFF) {
-                            setZoomed(m_image,imageY,imageX,color2int(m_color[z][x]));
+							setZoomed(m_image,imageY,imageX,color2int(m_color[z][x]));
 							m_readPixels[z] |= (1 << x);
 							m_blockPixelAttributes.attribute(15 - z, xBegin + x).thickness = m_thickness[z][x];
 						} else {
@@ -570,7 +570,7 @@ inline void TileGenerator::renderMapBlockBottom(const BlockPos &pos)
 			int imageX = xBegin + x;
 
 			if (m_drawAlpha) {
-                setZoomed(m_image,imageY,imageX, color2int(m_color[z][x]));
+				setZoomed(m_image,imageY,imageX, color2int(m_color[z][x]));
 				m_readPixels[z] |= (1 << x);
 				m_blockPixelAttributes.attribute(15 - z, xBegin + x).thickness = m_thickness[z][x];
 			}
@@ -607,7 +607,7 @@ inline void TileGenerator::renderShading(int zPos)
 			r = colorSafeBounds(r + d);
 			g = colorSafeBounds(g + d);
 			b = colorSafeBounds(b + d);
-            setZoomed(m_image,imageY,x, rgb2int(r, g, b));
+			setZoomed(m_image,imageY,x, rgb2int(r, g, b));
 		}
 	}
 	m_blockPixelAttributes.scroll();
@@ -701,19 +701,19 @@ void TileGenerator::printUnknown()
 
 inline int TileGenerator::getImageX(int val) const
 {
-       return (m_zoom*val) + m_border;
+	return (m_zoom*val) + m_border;
 }
 
 inline int TileGenerator::getImageY(int val) const
 {
-       return (m_zoom*val) + m_border;
+	return (m_zoom*val) + m_border;
 }
 
 inline void TileGenerator::setZoomed(gdImagePtr image, int y, int x, int color) {
-    int xx,yy;
-    for (xx = 0; xx < m_zoom; xx++) {
-        for (yy = 0; yy < m_zoom; yy++) {
-            image->tpixels[m_border + (y*m_zoom) + xx][m_border + (x*m_zoom) + yy] = color;
-        }
-    }
+	int xx,yy;
+	for (xx = 0; xx < m_zoom; xx++) {
+		for (yy = 0; yy < m_zoom; yy++) {
+			image->tpixels[m_border + (y*m_zoom) + xx][m_border + (x*m_zoom) + yy] = color;
+		}
+	}
 }

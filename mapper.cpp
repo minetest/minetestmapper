@@ -150,14 +150,14 @@ int main(int argc, char *argv[])
 					generator.setGeometry(x, y, w, h);
 				}
 				break;
-            case 'z': {
+			case 'z': {
 					istringstream iss;
 					iss.str(optarg);
 					int zoom;
 					iss >> zoom;
-                    generator.setZoom(zoom);
-                }
-                break;
+					generator.setZoom(zoom);
+				}
+				break;
 			default:
 				exit(1);
 		}
