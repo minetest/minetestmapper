@@ -82,6 +82,6 @@ geometry:
     Limit area to specific geometry, e.g. ``--geometry -800:-800+1600+1600``
 
 zoom:
-    "Zoom" the image by using more than one pixel per block.  
+    "Zoom" the image by using more than one pixel per node.
     Currently this only uses one color per block (even when zoomed) e.g. ``--zoom 4``
 
