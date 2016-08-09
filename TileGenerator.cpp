@@ -36,7 +36,7 @@ static inline int rgb2int(uint8_t r, uint8_t g, uint8_t b, uint8_t a=0xFF)
 
 static inline int color2int(Color c)
 {
-    return rgb2int(c.r, c.g, c.b, c.a);
+	return rgb2int(c.r, c.g, c.b, c.a);
 }
 
 // rounds n (away from 0) to a multiple of f while preserving the sign of n
@@ -87,15 +87,15 @@ static inline int colorSafeBounds(int color)
 
 static inline Color mixColors(Color a, Color b)
 {
-    Color result;
-    double a1 = a.a / 255.0;
-    double a2 = b.a / 255.0;
+	Color result;
+	double a1 = a.a / 255.0;
+	double a2 = b.a / 255.0;
 
-    result.r = (int) (a1 * a.r + a2 * (1 - a1) * b.r);
-    result.g = (int) (a1 * a.g + a2 * (1 - a1) * b.g);
-    result.b = (int) (a1 * a.b + a2 * (1 - a1) * b.b);
-    result.a = (int) (255 * (a1 + a2 * (1 - a1)));
-    return result;
+	result.r = (int) (a1 * a.r + a2 * (1 - a1) * b.r);
+	result.g = (int) (a1 * a.g + a2 * (1 - a1) * b.g);
+	result.b = (int) (a1 * a.b + a2 * (1 - a1) * b.b);
+	result.a = (int) (255 * (a1 + a2 * (1 - a1)));
+	return result;
 }
 
 TileGenerator::TileGenerator():
@@ -120,7 +120,8 @@ TileGenerator::TileGenerator():
 	m_geomX(-2048),
 	m_geomY(-2048),
 	m_geomX2(2048),
-	m_geomY2(2048)
+	m_geomY2(2048),
+	m_zoom(1)
 {
 }
 
@@ -146,6 +147,14 @@ void TileGenerator::setOriginColor(const std::string &originColor)
 void TileGenerator::setPlayerColor(const std::string &playerColor)
 {
 	m_playerColor = parseColor(playerColor);
+}
+
+void TileGenerator::setZoom(int zoom)
+{
+	if (zoom < 1) {
+		throw std::runtime_error("Zoom level needs to be a number: 1 or higher");
+	}
+	m_zoom = zoom;
 }
 
 Color TileGenerator::parseColor(const std::string &color)
@@ -186,7 +195,7 @@ void TileGenerator::setDrawScale(bool drawScale)
 
 void TileGenerator::setDrawAlpha(bool drawAlpha)
 {
-    m_drawAlpha = drawAlpha;
+	m_drawAlpha = drawAlpha;
 }
 
 void TileGenerator::setShading(bool shading)
@@ -346,10 +355,10 @@ void TileGenerator::createImage()
 {
 	m_mapWidth = (m_xMax - m_xMin + 1) * 16;
 	m_mapHeight = (m_zMax - m_zMin + 1) * 16;
-	m_image = gdImageCreateTrueColor(m_mapWidth + m_border, m_mapHeight + m_border);
+	m_image = gdImageCreateTrueColor((m_mapWidth * m_zoom) + m_border, (m_mapHeight * m_zoom) + m_border);
 	m_blockPixelAttributes.setWidth(m_mapWidth);
 	// Background
-	gdImageFilledRectangle(m_image, 0, 0, m_mapWidth + m_border - 1, m_mapHeight + m_border -1, color2int(m_bgColor));
+	gdImageFilledRectangle(m_image, 0, 0, (m_mapWidth * m_zoom) + m_border - 1, (m_mapHeight * m_zoom) + m_border -1, color2int(m_bgColor));
 }
 
 void TileGenerator::renderMap()
@@ -497,12 +506,12 @@ inline void TileGenerator::renderMapBlock(const ustring &mapBlock, const BlockPo
 	int minY = (pos.y * 16 > m_yMin) ? 0 : m_yMin - pos.y * 16;
 	int maxY = (pos.y * 16 < m_yMax) ? 15 : m_yMax - pos.y * 16;
 	for (int z = 0; z < 16; ++z) {
-		int imageY = getImageY(zBegin + 15 - z);
+		int imageY = zBegin + 15 - z;
 		for (int x = 0; x < 16; ++x) {
 			if (m_readPixels[z] & (1 << x)) {
 				continue;
 			}
-			int imageX = getImageX(xBegin + x);
+			int imageX = xBegin + x;
 
 			for (int y = maxY; y >= minY; --y) {
 				int position = x + (y << 4) + (z << 8);
@@ -523,7 +532,7 @@ inline void TileGenerator::renderMapBlock(const ustring &mapBlock, const BlockPo
 						else
 							m_color[z][x] = mixColors(m_color[z][x], c);
 						if(m_color[z][x].a == 0xFF) {
-							m_image->tpixels[imageY][imageX] = color2int(m_color[z][x]);
+							setZoomed(m_image,imageY,imageX,color2int(m_color[z][x]));
 							m_readPixels[z] |= (1 << x);
 							m_blockPixelAttributes.attribute(15 - z, xBegin + x).thickness = m_thickness[z][x];
 						} else {
@@ -531,7 +540,7 @@ inline void TileGenerator::renderMapBlock(const ustring &mapBlock, const BlockPo
 							continue;
 						}
 					} else {
-						m_image->tpixels[imageY][imageX] = color2int(c);
+						setZoomed(m_image,imageY,imageX,color2int(c));
 						m_readPixels[z] |= (1 << x);
 					}
 					if(!(m_readInfo[z] & (1 << x))) {
@@ -553,15 +562,15 @@ inline void TileGenerator::renderMapBlockBottom(const BlockPos &pos)
 	int xBegin = (pos.x - m_xMin) * 16;
 	int zBegin = (m_zMax - pos.z) * 16;
 	for (int z = 0; z < 16; ++z) {
-		int imageY = getImageY(zBegin + 15 - z);
+		int imageY = zBegin + 15 - z;
 		for (int x = 0; x < 16; ++x) {
 			if (m_readPixels[z] & (1 << x)) {
 				continue;
 			}
-			int imageX = getImageX(xBegin + x);
+			int imageX = xBegin + x;
 
 			if (m_drawAlpha) {
-				m_image->tpixels[imageY][imageX] = color2int(m_color[z][x]);
+				setZoomed(m_image,imageY,imageX, color2int(m_color[z][x]));
 				m_readPixels[z] |= (1 << x);
 				m_blockPixelAttributes.attribute(15 - z, xBegin + x).thickness = m_thickness[z][x];
 			}
@@ -577,7 +586,6 @@ inline void TileGenerator::renderShading(int zPos)
 		if (imageY >= m_mapHeight) {
 			continue;
 		}
-		imageY = getImageY(imageY);
 		for (int x = 0; x < m_mapWidth; ++x) {
 			if (!m_blockPixelAttributes.attribute(z, x).valid_height() || !m_blockPixelAttributes.attribute(z, x - 1).valid_height() || !m_blockPixelAttributes.attribute(z - 1, x).valid_height()) {
 				continue;
@@ -592,15 +600,14 @@ inline void TileGenerator::renderShading(int zPos)
 			// more thickness -> less visible shadows: t=0 -> 100% visible, t=255 -> 0% visible
 			if (m_drawAlpha)
 				d = d * ((0xFF - m_blockPixelAttributes.attribute(z, x).thickness) / 255.0);
-			int sourceColor = m_image->tpixels[imageY][getImageX(x)] & 0xffffff;
+			int sourceColor = m_image->tpixels[getImageY(imageY)][getImageX(x)] & 0xffffff;
 			uint8_t r = (sourceColor & 0xff0000) >> 16;
 			uint8_t g = (sourceColor & 0x00ff00) >> 8;
 			uint8_t b = (sourceColor & 0x0000ff);
 			r = colorSafeBounds(r + d);
 			g = colorSafeBounds(g + d);
 			b = colorSafeBounds(b + d);
-
-			m_image->tpixels[imageY][getImageX(x)] = rgb2int(r, g, b);
+			setZoomed(m_image,imageY,x, rgb2int(r, g, b));
 		}
 	}
 	m_blockPixelAttributes.scroll();
@@ -619,7 +626,7 @@ void TileGenerator::renderScale()
 		buf << i * 16;
 		scaleText = buf.str();
 
-		int xPos = m_xMin * -16 + i * 16 + m_border;
+		int xPos = (m_xMin * -16 + i * 16)*m_zoom + m_border;
 		gdImageString(m_image, gdFontGetMediumBold(), xPos + 2, 0, reinterpret_cast<unsigned char *>(const_cast<char *>(scaleText.c_str())), color);
 		gdImageLine(m_image, xPos, 0, xPos, m_border - 1, color);
 	}
@@ -629,7 +636,7 @@ void TileGenerator::renderScale()
 		buf << i * 16;
 		scaleText = buf.str();
 
-		int yPos = m_mapHeight - 1 - (i * 16 - m_zMin * 16) + m_border;
+		int yPos = (m_mapHeight - 1 - (i * 16 - m_zMin * 16))*m_zoom + m_border;
 		gdImageString(m_image, gdFontGetMediumBold(), 2, yPos, reinterpret_cast<unsigned char *>(const_cast<char *>(scaleText.c_str())), color);
 		gdImageLine(m_image, 0, yPos, m_border - 1, yPos, color);
 	}
@@ -637,8 +644,8 @@ void TileGenerator::renderScale()
 
 void TileGenerator::renderOrigin()
 {
-	int imageX = -m_xMin * 16 + m_border;
-	int imageY = m_mapHeight - m_zMin * -16 + m_border;
+	int imageX = (-m_xMin * 16)*m_zoom + m_border;
+	int imageY = (m_mapHeight - m_zMin * -16)*m_zoom + m_border;
 	gdImageArc(m_image, imageX, imageY, 12, 12, 0, 360, color2int(m_originColor));
 }
 
@@ -648,8 +655,8 @@ void TileGenerator::renderPlayers(const std::string &inputPath)
 
 	PlayerAttributes players(inputPath);
 	for (PlayerAttributes::Players::iterator player = players.begin(); player != players.end(); ++player) {
-		int imageX = player->x / 10 - m_xMin * 16 + m_border;
-		int imageY = m_mapHeight - (player->z / 10 - m_zMin * 16) + m_border;
+		int imageX = (player->x / 10 - m_xMin * 16)*m_zoom + m_border;
+		int imageY = (m_mapHeight - (player->z / 10 - m_zMin * 16))*m_zoom + m_border;
 
 		gdImageArc(m_image, imageX, imageY, 5, 5, 0, 360, color);
 		gdImageString(m_image, gdFontGetMediumBold(), imageX + 2, imageY + 2, reinterpret_cast<unsigned char *>(const_cast<char *>(player->name.c_str())), color);
@@ -694,10 +701,19 @@ void TileGenerator::printUnknown()
 
 inline int TileGenerator::getImageX(int val) const
 {
-	return val + m_border;
+	return (m_zoom*val) + m_border;
 }
 
 inline int TileGenerator::getImageY(int val) const
 {
-	return val + m_border;
+	return (m_zoom*val) + m_border;
+}
+
+inline void TileGenerator::setZoomed(gdImagePtr image, int y, int x, int color) {
+	int xx,yy;
+	for (xx = 0; xx < m_zoom; xx++) {
+		for (yy = 0; yy < m_zoom; yy++) {
+			image->tpixels[m_border + (y*m_zoom) + xx][m_border + (x*m_zoom) + yy] = color;
+		}
+	}
 }

@@ -43,41 +43,45 @@ Parameters
 ^^^^^^^^^^
 
 bgcolor:
-    Background color of image, `--bgcolor #ffffff`
+    Background color of image, e.g. ``--bgcolor #ffffff``
 
 scalecolor:
-    Color of scale, `--scalecolor #000000`
+    Color of scale, e.g. ``--scalecolor #000000``
 
 playercolor:
-    Color of player indicators, `--playercolor #ff0000`
+    Color of player indicators, e.g. ``--playercolor #ff0000``
 
 origincolor:
-    Color of origin indicator, `--origincolor #ff0000`
+    Color of origin indicator, e.g. ``--origincolor #ff0000``
 
 drawscale:
-    Draw tick marks, `--drawscale`
+    Draw tick marks, ``--drawscale``
 
 drawplayers:
-    Draw player indicators, `--drawplayers`
+    Draw player indicators, ``--drawplayers``
 
 draworigin:
-    Draw origin indicator, `--draworigin`
+    Draw origin indicator, ``--draworigin``
 
 drawalpha:
-    Allow nodes to be drawn with transparency, `--drawalpha`
+    Allow nodes to be drawn with transparency, ``--drawalpha``
 
 noshading:
-    Don't draw shading on nodes, `--noshading`
+    Don't draw shading on nodes, ``--noshading``
 
 min-y:
-    Don't draw nodes below this y value, `--min-y -25`
+    Don't draw nodes below this y value, e.g. ``--min-y -25``
 
 max-y:
-    Don't draw nodes above this y value, `--max-y 75`
+    Don't draw nodes above this y value, e.g. ``--max-y 75``
 
 backend:
-    Use specific map backend, supported: sqlite3, leveldb, redis, `--backend leveldb`
+    Use specific map backend, supported: *sqlite3*, *leveldb*, *redis*, e.g. ``--backend leveldb``
 
 geometry:
-    Limit area to specific geometry, `--geometry -800:-800+1600+1600`
+    Limit area to specific geometry, e.g. ``--geometry -800:-800+1600+1600``
+
+zoom:
+    "Zoom" the image by using more than one pixel per node.
+    Currently this only uses one color per block (even when zoomed) e.g. ``--zoom 4``
 

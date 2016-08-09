@@ -36,6 +36,7 @@ void usage()
 			"  --max-y <y>\n"
 			"  --backend <backend>\n"
 			"  --geometry x:y+w+h\n"
+			"  --zoom <zoomlevel>\n"
 			"Color format: '#000000'\n";
 	std::cout << usage_text;
 }
@@ -59,7 +60,8 @@ int main(int argc, char *argv[])
 		{"backend", required_argument, 0, 'd'},
 		{"geometry", required_argument, 0, 'g'},
 		{"min-y", required_argument, 0, 'a'},
-		{"max-y", required_argument, 0, 'c'}
+		{"max-y", required_argument, 0, 'c'},
+		{"zoom", required_argument, 0, 'z'}
 	};
 
 	string input;
@@ -146,6 +148,14 @@ int main(int argc, char *argv[])
 						exit(1);
 					}
 					generator.setGeometry(x, y, w, h);
+				}
+				break;
+			case 'z': {
+					istringstream iss;
+					iss.str(optarg);
+					int zoom;
+					iss >> zoom;
+					generator.setZoom(zoom);
 				}
 				break;
 			default:
