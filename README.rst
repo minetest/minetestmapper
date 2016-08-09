@@ -4,7 +4,8 @@ Minetest Mapper C++
 .. image:: https://travis-ci.org/minetest/minetestmapper.svg?branch=master
     :target: https://travis-ci.org/minetest/minetestmapper
 
-A port of minetestmapper.py to C++ from https://github.com/minetest/minetest/tree/master/util
+A port of minetestmapper.py to C++ from https://github.com/minetest/minetest/tree/master/util.
+This version is both faster and provides more features than the now deprecated Python script.
 
 Requirements
 ------------
@@ -14,23 +15,28 @@ Requirements
 * leveldb (optional, set ENABLE_LEVELDB=1 in CMake to enable leveldb support)
 * hiredis (optional, set ENABLE_REDIS=1 in CMake to enable redis support)
 
+e.g. on Debian:
+^^^^^^^^^^^^^^^
+
+	sudo apt-get install libgd-dev libsqlite3-dev libleveldb-dev libhiredis-dev
+
 Compilation
 -----------
 
 ::
 
-    cmake .
-    make
+    cmake . -DENABLE_LEVELDB=1
+    make -j2
 
 Usage
 -----
 
-Binary `minetestmapper` has two mandatory paremeters, `-i` (input world path)
+`minetestmapper` has two mandatory paremeters, `-i` (input world path)
 and `-o` (output image path).
 
 ::
 
-    ./minetestmapper -i ~/.minetest/worlds/my_world/ -o ~/map.png
+    ./minetestmapper -i ~/.minetest/worlds/my_world/ -o map.png
 
 
 Parameters
@@ -58,7 +64,7 @@ draworigin:
     Draw origin indicator, ``--draworigin``
 
 drawalpha:
-    Allow blocks to be drawn with transparency, ``--drawalpha``
+    Allow nodes to be drawn with transparency, ``--drawalpha``
 
 noshading:
     Don't draw shading on nodes, ``--noshading``
