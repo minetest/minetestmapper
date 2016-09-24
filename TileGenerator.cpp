@@ -523,8 +523,10 @@ inline void TileGenerator::renderMapBlock(const ustring &mapBlock, const BlockPo
 					continue;
 				}
 				NameMap::iterator blockName = m_nameMap.find(content);
-				if (blockName == m_nameMap.end())
+				if (blockName == m_nameMap.end()) {
+					std::cerr << "Skipping node with invalid name ID" << std::endl;
 					continue;
+				}
 				const string &name = blockName->second;
 				ColorMap::const_iterator color = m_colorMap.find(name);
 				if (color != m_colorMap.end()) {
