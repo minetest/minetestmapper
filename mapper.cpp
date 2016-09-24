@@ -82,6 +82,7 @@ int main(int argc, char *argv[])
 		{"max-y", required_argument, 0, 'c'},
 		{"zoom", required_argument, 0, 'z'},
 		{"colors", required_argument, 0, 'C'},
+		{0, 0, 0, 0}
 	};
 
 	std::string input;
