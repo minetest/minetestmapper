@@ -441,6 +441,7 @@ void TileGenerator::renderMap()
 
 				m_blockAirId = -1;
 				m_blockIgnoreId = -1;
+				m_nameMap.clear();
 				// Read mapping
 				if (version >= 22) {
 					dataOffset++; // mapping version
