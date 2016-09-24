@@ -523,7 +523,7 @@ inline void TileGenerator::renderMapBlock(const ustring &mapBlock, const BlockPo
 			for (int y = maxY; y >= minY; --y) {
 				int position = x + (y << 4) + (z << 8);
 				int content = readBlockContent(mapData, version, position);
-				if (content == m_blockIgnoreId || content == m_blockAirId) {
+				if (content == m_blockAirId || content == m_blockIgnoreId) {
 					continue;
 				}
 				NameMap::iterator blockName = m_nameMap.find(content);
