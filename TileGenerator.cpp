@@ -464,6 +464,10 @@ void TileGenerator::renderMap()
 						}
 						dataOffset += nameLen;
 					}
+					// Skip block if made of only air or ignored blocks
+					if (m_nameMap.empty()) {
+						continue;
+					}
 				}
 
 				// Node timers
