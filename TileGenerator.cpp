@@ -272,13 +272,14 @@ void TileGenerator::parseColorsStream(std::istream &in)
 		}
 
 		char name[64];
+		name[0] = '\0';
 		unsigned int r, g, b, a, t;
 		a = 255;
 		t = 0;
 
 		sscanf(line, "%64s %u %u %u %u %u", name, &r, &g, &b, &a, &t);
 		if(strlen(name) == 0)
-			break;
+			continue;
 		ColorEntry color = ColorEntry(r, g, b, a, t);
 		m_colorMap[name] = color;
 	}
