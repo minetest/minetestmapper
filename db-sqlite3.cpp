@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <unistd.h> // for usleep
+#include <iostream>
 #include "db-sqlite3.h"
 #include "types.h"
 
@@ -31,11 +32,12 @@ DBSQLite3::DBSQLite3(const std::string &mapdir)
 
 DBSQLite3::~DBSQLite3()
 {
-	int result;
-	SQLOK(finalize(stmt_get_blocks_z));
-	SQLOK(finalize(stmt_get_block_pos));
+	sqlite3_finalize(stmt_get_blocks_z);
+	sqlite3_finalize(stmt_get_block_pos);
 
-	SQLOK(close(db));
+	if (sqlite3_close(db) != SQLITE_OK) {
+		std::cerr << "Error closing SQlite DB\n";
+	};
 }
 
 std::vector<BlockPos> DBSQLite3::getBlockPos()
