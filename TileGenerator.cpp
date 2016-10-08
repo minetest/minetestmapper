@@ -261,15 +261,14 @@ void TileGenerator::generate(const std::string &input, const std::string &output
 
 void TileGenerator::parseColorsStream(std::istream &in)
 {
-	char line[128], *p;
+	char line[128];
 	while (in.good()) {
 		in.getline(line, 128);
-		p = line;
-		while(*p++ != '\0') {
-			if(*p != '#')
-				continue;
-			*p = '\0'; // Cut off at the first #
-			break;
+		for (char *p = line; *p != '\0'; ++p) {
+			if(*p == '#') {
+				*p = '\0'; // Cut off at the first #
+				break;
+			}
 		}
 
 		char name[64];
