@@ -71,6 +71,26 @@ std::vector<BlockPos> DBRedis::getBlockPos()
 }
 
 
+std::string DBRedis::replyTypeStr(int type) {
+	switch(type) {
+		case REDIS_REPLY_STATUS:
+			return "REDIS_REPLY_STATUS";
+		case REDIS_REPLY_ERROR:
+			return "REDIS_REPLY_ERROR";
+		case REDIS_REPLY_INTEGER:
+			return "REDIS_REPLY_INTEGER";
+		case REDIS_REPLY_NIL:
+			return "REDIS_REPLY_NIL";
+		case REDIS_REPLY_STRING:
+			return "REDIS_REPLY_STRING";
+		case REDIS_REPLY_ARRAY:
+			return "REDIS_REPLY_ARRAY";
+		default:
+			return "UNKNOWN_REPLY_TYPE";
+	}
+}
+
+
 void DBRedis::loadPosCache()
 {
 	redisReply *reply;

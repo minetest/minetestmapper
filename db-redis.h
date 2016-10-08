@@ -11,6 +11,8 @@ public:
 	virtual void getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zPos);
 	virtual ~DBRedis();
 private:
+	static std::string replyTypeStr(int type);
+
 	void loadPosCache();
 
 	std::vector<BlockPos> posCache;
