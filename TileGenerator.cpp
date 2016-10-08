@@ -277,9 +277,13 @@ void TileGenerator::parseColorsStream(std::istream &in)
 		a = 255;
 		t = 0;
 
-		sscanf(line, "%64s %u %u %u %u %u", name, &r, &g, &b, &a, &t);
+		int read_items = sscanf(line, "%64s %u %u %u %u %u", name, &r, &g, &b, &a, &t);
 		if(strlen(name) == 0)
 			continue;
+		if(read_items < 4) {
+			std::cerr << "Unable to parse color '" << line << "'\n";
+			continue;
+		}
 		ColorEntry color = ColorEntry(r, g, b, a, t);
 		m_colorMap[name] = color;
 	}
