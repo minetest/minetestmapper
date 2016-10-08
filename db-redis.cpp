@@ -169,22 +169,20 @@ void DBRedis::HMGET(const std::vector<BlockPos> &positions, std::vector<ustring>
 
 void DBRedis::getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zPos)
 {
-	redisReply *reply;
-	std::string tmp;
-
-	for (std::vector<BlockPos>::iterator it = posCache.begin(); it != posCache.end(); ++it) {
+	std::vector<BlockPos> z_positions;
+	for (std::vector<BlockPos>::const_iterator it = posCache.begin(); it != posCache.end(); ++it) {
 		if (it->z != zPos) {
 			continue;
 		}
-		tmp = i64tos(encodeBlockPos(*it));
-		reply = (redisReply*) redisCommand(ctx, "HGET %s %s", hash.c_str(), tmp.c_str());
-		if(!reply)
-			throw std::runtime_error(std::string("redis command 'HGET %s %s' failed: ") + ctx->errstr);
-		if (reply->type == REDIS_REPLY_STRING && reply->len != 0) {
-			Block b(*it, ustring((const unsigned char *) reply->str, reply->len));
-			blocks[b.first.x].push_back(b);
-		} else
-			throw std::runtime_error("Got wrong response to 'HGET %s %s' command");
-		freeReplyObject(reply);
+		z_positions.push_back(*it);
+	}
+	std::vector<ustring> z_blocks;
+	HMGET(z_positions, &z_blocks);
+
+	std::vector<ustring>::const_iterator z_block = z_blocks.begin();
+	for (std::vector<BlockPos>::const_iterator pos = z_positions.begin();
+			pos != z_positions.end();
+			++pos, ++z_block) {
+		blocks[pos->x].push_back(Block(*pos, *z_block));
 	}
 }
