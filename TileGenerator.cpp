@@ -264,6 +264,7 @@ void TileGenerator::parseColorsStream(std::istream &in)
 	char line[128], *p;
 	while (in.good()) {
 		in.getline(line, 128);
+		p = line;
 		while(*p++ != '\0') {
 			if(*p != '#')
 				continue;
