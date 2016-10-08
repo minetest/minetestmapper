@@ -5,6 +5,8 @@
 #include "types.h"
 #include "util.h"
 
+#define DB_REDIS_HMGET_NUMFIELDS 30
+
 static inline int64_t stoi64(const std::string &s)
 {
 	std::stringstream tmp(s);
@@ -106,6 +108,62 @@ void DBRedis::loadPosCache()
 	}
 
 	freeReplyObject(reply);
+}
+
+
+void DBRedis::HMGET(const std::vector<BlockPos> &positions, std::vector<ustring> *result)
+{
+	const char *argv[DB_REDIS_HMGET_NUMFIELDS + 2];
+	argv[0] = "HMGET";
+	argv[1] = hash.c_str();
+
+	std::vector<BlockPos>::const_iterator position = positions.begin();
+	std::size_t remaining = positions.size();
+	while (remaining > 0) {
+		const std::size_t batch_size =
+			(remaining > DB_REDIS_HMGET_NUMFIELDS) ? DB_REDIS_HMGET_NUMFIELDS : remaining;
+		redisReply *reply;
+		{
+			// storage to preserve std::string::c_str() validity
+			std::vector<std::string> keys;
+			keys.reserve(batch_size);
+			for (std::size_t i = 0; i < batch_size; ++i) {
+				keys.push_back(i64tos(encodeBlockPos(*position++)));
+				argv[i+2] = keys.back().c_str();
+			}
+			reply = (redisReply*) redisCommandArgv(ctx, batch_size + 2, argv, NULL);
+		}
+		if(!reply) {
+			throw std::runtime_error("HMGET failed");
+		}
+		if (reply->type != REDIS_REPLY_ARRAY) {
+			freeReplyObject(reply);
+			throw std::runtime_error(std::string("HMGET unexpected reply type ")
+					+ replyTypeStr(reply->type));
+		}
+		if (reply->elements != batch_size) {
+			freeReplyObject(reply);
+			throw std::runtime_error("HMGET wrong number of elements");
+		}
+		for (std::size_t i = 0; i < batch_size; ++i) {
+			redisReply *subreply = reply->element[i];
+			if(!subreply) {
+				throw std::runtime_error("HMGET failed");
+			}
+			if (subreply->type != REDIS_REPLY_STRING) {
+				freeReplyObject(reply);
+				throw std::runtime_error(std::string("HMGET wrong subreply type ")
+						+ replyTypeStr(subreply->type));
+			}
+			if (subreply->len == 0) {
+				freeReplyObject(reply);
+				throw std::runtime_error("HMGET empty string");
+			}
+			result->push_back(ustring((const unsigned char *) subreply->str, subreply->len));
+		}
+		freeReplyObject(reply);
+		remaining -= batch_size;
+	}
 }
 
 

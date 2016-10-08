@@ -14,6 +14,7 @@ private:
 	static std::string replyTypeStr(int type);
 
 	void loadPosCache();
+	void HMGET(const std::vector<BlockPos> &positions, std::vector<ustring> *result);
 
 	std::vector<BlockPos> posCache;
 
