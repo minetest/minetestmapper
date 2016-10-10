@@ -110,7 +110,8 @@ TileGenerator::TileGenerator():
 	m_shading(true),
 	m_backend(""),
 	m_border(0),
-	m_image(0),
+	m_db(NULL),
+	m_image(NULL),
 	m_xMin(INT_MAX),
 	m_xMax(INT_MIN),
 	m_zMin(INT_MAX),
@@ -127,6 +128,7 @@ TileGenerator::TileGenerator():
 
 TileGenerator::~TileGenerator()
 {
+	closeDatabase();
 }
 
 void TileGenerator::setBgColor(const std::string &bgColor)
@@ -246,6 +248,7 @@ void TileGenerator::generate(const std::string &input, const std::string &output
 	loadBlocks();
 	createImage();
 	renderMap();
+	closeDatabase();
 	if (m_drawScale) {
 		renderScale();
 	}
@@ -312,6 +315,12 @@ void TileGenerator::openDb(const std::string &input)
 #endif
 	else
 		throw std::runtime_error(((std::string) "Unknown map backend: ") + backend);
+}
+
+void TileGenerator::closeDatabase()
+{
+	delete m_db;
+	m_db = NULL;
 }
 
 void TileGenerator::loadBlocks()

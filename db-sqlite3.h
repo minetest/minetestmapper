@@ -9,7 +9,7 @@ public:
 	DBSQLite3(const std::string &mapdir);
 	virtual std::vector<BlockPos> getBlockPos();
 	virtual void getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zPos);
-	~DBSQLite3();
+	virtual ~DBSQLite3();
 private:
 	sqlite3 *db;
 

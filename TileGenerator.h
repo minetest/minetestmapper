@@ -76,6 +76,7 @@ public:
 private:
 	void parseColorsStream(std::istream &in);
 	void openDb(const std::string &input);
+	void closeDatabase();
 	void loadBlocks();
 	void createImage();
 	void renderMap();

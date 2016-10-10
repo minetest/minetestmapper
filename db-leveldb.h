@@ -9,7 +9,7 @@ public:
 	DBLevelDB(const std::string &mapdir);
 	virtual std::vector<BlockPos> getBlockPos();
 	virtual void getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zPos);
-	~DBLevelDB();
+	virtual ~DBLevelDB();
 private:
 	void loadPosCache();
 

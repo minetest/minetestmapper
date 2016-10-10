@@ -55,6 +55,7 @@ protected:
 public:
 	virtual std::vector<BlockPos> getBlockPos() = 0;
 	virtual void getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zPos) = 0;
+	virtual ~DB() {};
 };
 
 
