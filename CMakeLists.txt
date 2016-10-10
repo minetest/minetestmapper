@@ -10,7 +10,7 @@ set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}")
 # Stuff & Paths
 
 if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build.")
+	set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
 endif()
 
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall")
