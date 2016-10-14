@@ -5,6 +5,8 @@
 #include "types.h"
 #include "util.h"
 
+#define DB_REDIS_HMGET_NUMFIELDS 30
+
 static inline int64_t stoi64(const std::string &s)
 {
 	std::stringstream tmp(s);
@@ -71,6 +73,26 @@ std::vector<BlockPos> DBRedis::getBlockPos()
 }
 
 
+std::string DBRedis::replyTypeStr(int type) {
+	switch(type) {
+		case REDIS_REPLY_STATUS:
+			return "REDIS_REPLY_STATUS";
+		case REDIS_REPLY_ERROR:
+			return "REDIS_REPLY_ERROR";
+		case REDIS_REPLY_INTEGER:
+			return "REDIS_REPLY_INTEGER";
+		case REDIS_REPLY_NIL:
+			return "REDIS_REPLY_NIL";
+		case REDIS_REPLY_STRING:
+			return "REDIS_REPLY_STRING";
+		case REDIS_REPLY_ARRAY:
+			return "REDIS_REPLY_ARRAY";
+		default:
+			return "UNKNOWN_REPLY_TYPE";
+	}
+}
+
+
 void DBRedis::loadPosCache()
 {
 	redisReply *reply;
@@ -89,24 +111,78 @@ void DBRedis::loadPosCache()
 }
 
 
+void DBRedis::HMGET(const std::vector<BlockPos> &positions, std::vector<ustring> *result)
+{
+	const char *argv[DB_REDIS_HMGET_NUMFIELDS + 2];
+	argv[0] = "HMGET";
+	argv[1] = hash.c_str();
+
+	std::vector<BlockPos>::const_iterator position = positions.begin();
+	std::size_t remaining = positions.size();
+	while (remaining > 0) {
+		const std::size_t batch_size =
+			(remaining > DB_REDIS_HMGET_NUMFIELDS) ? DB_REDIS_HMGET_NUMFIELDS : remaining;
+		redisReply *reply;
+		{
+			// storage to preserve std::string::c_str() validity
+			std::vector<std::string> keys;
+			keys.reserve(batch_size);
+			for (std::size_t i = 0; i < batch_size; ++i) {
+				keys.push_back(i64tos(encodeBlockPos(*position++)));
+				argv[i+2] = keys.back().c_str();
+			}
+			reply = (redisReply*) redisCommandArgv(ctx, batch_size + 2, argv, NULL);
+		}
+		if(!reply) {
+			throw std::runtime_error("HMGET failed");
+		}
+		if (reply->type != REDIS_REPLY_ARRAY) {
+			freeReplyObject(reply);
+			throw std::runtime_error(std::string("HMGET unexpected reply type ")
+					+ replyTypeStr(reply->type));
+		}
+		if (reply->elements != batch_size) {
+			freeReplyObject(reply);
+			throw std::runtime_error("HMGET wrong number of elements");
+		}
+		for (std::size_t i = 0; i < batch_size; ++i) {
+			redisReply *subreply = reply->element[i];
+			if(!subreply) {
+				throw std::runtime_error("HMGET failed");
+			}
+			if (subreply->type != REDIS_REPLY_STRING) {
+				freeReplyObject(reply);
+				throw std::runtime_error(std::string("HMGET wrong subreply type ")
+						+ replyTypeStr(subreply->type));
+			}
+			if (subreply->len == 0) {
+				freeReplyObject(reply);
+				throw std::runtime_error("HMGET empty string");
+			}
+			result->push_back(ustring((const unsigned char *) subreply->str, subreply->len));
+		}
+		freeReplyObject(reply);
+		remaining -= batch_size;
+	}
+}
+
+
 void DBRedis::getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zPos)
 {
-	redisReply *reply;
-	std::string tmp;
-
-	for (std::vector<BlockPos>::iterator it = posCache.begin(); it != posCache.end(); ++it) {
+	std::vector<BlockPos> z_positions;
+	for (std::vector<BlockPos>::const_iterator it = posCache.begin(); it != posCache.end(); ++it) {
 		if (it->z != zPos) {
 			continue;
 		}
-		tmp = i64tos(encodeBlockPos(*it));
-		reply = (redisReply*) redisCommand(ctx, "HGET %s %s", hash.c_str(), tmp.c_str());
-		if(!reply)
-			throw std::runtime_error(std::string("redis command 'HGET %s %s' failed: ") + ctx->errstr);
-		if (reply->type == REDIS_REPLY_STRING && reply->len != 0) {
-			Block b(*it, ustring((const unsigned char *) reply->str, reply->len));
-			blocks[b.first.x].push_back(b);
-		} else
-			throw std::runtime_error("Got wrong response to 'HGET %s %s' command");
-		freeReplyObject(reply);
+		z_positions.push_back(*it);
+	}
+	std::vector<ustring> z_blocks;
+	HMGET(z_positions, &z_blocks);
+
+	std::vector<ustring>::const_iterator z_block = z_blocks.begin();
+	for (std::vector<BlockPos>::const_iterator pos = z_positions.begin();
+			pos != z_positions.end();
+			++pos, ++z_block) {
+		blocks[pos->x].push_back(Block(*pos, *z_block));
 	}
 }
