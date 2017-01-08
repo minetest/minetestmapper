@@ -6,7 +6,7 @@
 
 class DBPostgreSQL : public DB {
 public:
-	DBPostgreSQL(const std::string &connect_string);
+	DBPostgreSQL(const std::string &mapdir);
 	virtual std::vector<BlockPos> getBlockPos();
 	virtual void getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zPos);
 	virtual ~DBPostgreSQL();

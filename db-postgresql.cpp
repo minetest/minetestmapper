@@ -1,13 +1,20 @@
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
 #include <arpa/inet.h>
 #include "db-postgresql.h"
+#include "util.h"
 #include "types.h"
 
 #define ARRLEN(x) (sizeof(x) / sizeof((x)[0]))
 
-DBPostgreSQL::DBPostgreSQL(const std::string &connect_string)
+DBPostgreSQL::DBPostgreSQL(const std::string &mapdir)
 {
+	std::ifstream ifs((mapdir + "/world.mt").c_str());
+	if(!ifs.good())
+		throw std::runtime_error("Failed to read world.mt");
+	std::string const connect_string = get_setting("pgsql_connection", ifs);
+	ifs.close();
 	db = PQconnectdb(connect_string.c_str());
 
 	if (PQstatus(db) != CONNECTION_OK) {
@@ -35,11 +42,8 @@ DBPostgreSQL::~DBPostgreSQL()
 {
 	try {
 		checkResults(PQexec(db, "COMMIT;"));
-	} catch (
-		std::exception& caught
-	) {
-		std::cerr << "could not finalize: " << caught.what();
-		std::cerr << std::endl;
+	} catch (std::exception& caught) {
+		std::cerr << "could not finalize: " << caught.what() << std::endl;
 	}
 	PQfinish(db);
 }
@@ -55,9 +59,8 @@ std::vector<BlockPos> DBPostgreSQL::getBlockPos()
 
 	int numrows = PQntuples(results);
 
-	for (int row = 0; row < numrows; ++row) {
+	for (int row = 0; row < numrows; ++row)
 		positions.push_back(pg_to_blockpos(results, row, 0));
-	}
 
 	PQclear(results);
 
