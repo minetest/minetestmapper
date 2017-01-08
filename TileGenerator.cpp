@@ -13,6 +13,9 @@
 #include "ZlibDecompressor.h"
 #include "util.h"
 #include "db-sqlite3.h"
+#if USE_POSTGRESQL
+#include "db-postgresql.h"
+#endif
 #if USE_LEVELDB
 #include "db-leveldb.h"
 #endif
@@ -283,6 +286,16 @@ void TileGenerator::openDb(const std::string &input)
 
 	if(backend == "sqlite3")
 		m_db = new DBSQLite3(input);
+#if USE_POSTGRESQL
+	else if(backend == "postgresql") {
+		std::ifstream ifs((input + "/world.mt").c_str());
+		if(!ifs.good())
+			throw std::runtime_error("Failed to read world.mt");
+		std::string const connect_string = get_setting("pgsql_connection", ifs);
+		ifs.close();
+		m_db = new DBPostgreSQL(connect_string);
+	}
+#endif
 #if USE_LEVELDB
 	else if(backend == "leveldb")
 		m_db = new DBLevelDB(input);

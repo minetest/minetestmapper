@@ -9,6 +9,7 @@
 #ifdef USE_CMAKE_CONFIG_H
 #include "cmake_config.h"
 #else
+#define USE_POSTGRESQL 0
 #define USE_LEVELDB 0
 #define USE_REDIS 0
 

@@ -78,6 +78,39 @@ if(NOT SQLITE3_LIBRARY OR NOT SQLITE3_INCLUDE_DIR)
 	message(FATAL_ERROR "sqlite3 not found!")
 endif(NOT SQLITE3_LIBRARY OR NOT SQLITE3_INCLUDE_DIR)
 
+# Libraries: postgresql
+
+option(ENABLE_POSTGRESQL "Enable PostgreSQL backend" TRUE)
+set(USE_POSTGRESQL 0)
+
+if(ENABLE_POSTGRESQL)
+	find_program(POSTGRESQL_CONFIG_EXECUTABLE pg_config DOC "pg_config")
+	find_library(POSTGRESQL_LIBRARY pq)
+	if(POSTGRESQL_CONFIG_EXECUTABLE)
+		execute_process(COMMAND ${POSTGRESQL_CONFIG_EXECUTABLE} --includedir-server
+			OUTPUT_VARIABLE POSTGRESQL_SERVER_INCLUDE_DIRS
+			OUTPUT_STRIP_TRAILING_WHITESPACE)
+		execute_process(COMMAND ${POSTGRESQL_CONFIG_EXECUTABLE}
+			OUTPUT_VARIABLE POSTGRESQL_CLIENT_INCLUDE_DIRS
+			OUTPUT_STRIP_TRAILING_WHITESPACE)
+		# This variable is case sensitive for the cmake PostgreSQL module
+		set(PostgreSQL_ADDITIONAL_SEARCH_PATHS ${POSTGRESQL_SERVER_INCLUDE_DIRS} ${POSTGRESQL_CLIENT_INCLUDE_DIRS})
+	endif()
+
+	find_package("PostgreSQL")
+
+	if(POSTGRESQL_FOUND)
+		set(USE_POSTGRESQL 1)
+		message(STATUS "PostgreSQL backend enabled")
+		# This variable is case sensitive, don't try to change it to POSTGRESQL_INCLUDE_DIR
+		message(STATUS "PostgreSQL includes: ${PostgreSQL_INCLUDE_DIR}")
+		include_directories(${PostgreSQL_INCLUDE_DIR})
+		set(POSTGRESQL_LIBRARY ${PostgreSQL_LIBRARIES})
+	else()
+		message(STATUS "PostgreSQL not found!")
+	endif()
+endif(ENABLE_POSTGRESQL)
+
 # Libraries: leveldb
 
 set(USE_LEVELDB 0)
@@ -148,6 +181,10 @@ set(mapper_SRCS
 	db-sqlite3.cpp
 )
 
+if(USE_POSTGRESQL)
+	set(mapper_SRCS ${mapper_SRCS} db-postgresql.cpp)
+endif(USE_POSTGRESQL)
+
 if(USE_LEVELDB)
 	set(mapper_SRCS ${mapper_SRCS} db-leveldb.cpp)
 endif(USE_LEVELDB)
@@ -163,6 +200,7 @@ add_executable(minetestmapper
 target_link_libraries(
 	minetestmapper
 	${SQLITE3_LIBRARY}
+	${POSTGRESQL_LIBRARY}
 	${LEVELDB_LIBRARY}
 	${REDIS_LIBRARY}
 	${LIBGD_LIBRARY}
