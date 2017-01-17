@@ -1,0 +1,91 @@
+.TH MINETESTMAPPER 6
+.SH NAME
+minetestmapper \- generate an overview image of a minetest map
+.SH SYNOPSIS
+.B minetestmapper 
+\fB\-i\fR \fIinput-world\fR
+\fB\-o\fR \fIoutput-image\fR
+.PP
+See additional optional parameters below.
+.SH DESCRIPTION
+.B minetestmapper
+generates an overview image of a minetest map. This is a port of
+minetestmapper.py to C++, that is both faster and provides more
+details than the deprecated Python script.
+.SH MANDATORY PARAMETERS
+.TP
+.BR \-i " " \fIinput-world\fR
+Input world path.
+.TP
+.BR \-o " " \fIoutput-image\fR
+Output image path.
+.SH OPTIONAL PARAMETERS
+.TP
+.BR \-\-bgcolor " " \fIcolor\fR
+Background color of image, e.g. "--bgcolor #ffffff"
+
+.TP
+.BR \-\-scalecolor " " \fIcolor\fR
+Color of scale, e.g. "--scalecolor #000000"
+
+.TP
+.BR \-\-playercolor " " \fIcolor\fR
+Color of player indicators, e.g. "--playercolor #ff0000"
+
+.TP
+.BR \-\-origincolor " " \fIcolor\fR
+Color of origin indicator, e.g. "--origincolor #ff0000"
+
+.TP
+.BR \-\-drawscale
+Draw tick marks
+
+.TP
+.BR \-\-drawplayers
+Draw player indicators
+
+.TP
+.BR \-\-draworigin
+Draw origin indicator
+
+.TP
+.BR \-\-drawalpha
+Allow nodes to be drawn with transparency
+
+.TP
+.BR \-\-noshading
+Don't draw shading on nodes
+
+.TP
+.BR \-\-min-y " " \fInumber\fR
+Don't draw nodes below this y value, e.g. "--min-y -25"
+
+.TP
+.BR \-\-max-y " " \fInumber\fR
+Don't draw nodes above this y value, e.g. "--max-y 75"
+
+.TP
+.BR \-\-backend " " \fIbackend\fR
+Use specific map backend; supported: *sqlite3*, *leveldb*, *redis*, *postgresql*, e.g. "--backend leveldb"
+
+.TP
+.BR \-\-geometry " " \fIgeometry\fR
+Limit area to specific geometry (*x:y+w+h* where x and y specify the lower left corner), e.g. "--geometry -800:-800+1600+1600"
+
+.TP
+.BR \-\-zoom " " \fIfactor\fR
+Zoom the image by using more than one pixel per node, e.g. "--zoom 4"
+
+.TP
+.BR \-\-colors " " \fIpath\fR
+Forcefully set path to colors.txt file (it's autodetected otherwise), e.g. "--colors ../minetest/mycolors.txt"
+
+.TP
+.BR \-\-scales " " \fIedges\fR
+Draw scales on specified image edges (letters *t b l r* meaning top, bottom, left and right), e.g. "--scales tbr"
+
+.SH MORE INFORMATION
+Website: https://github.com/minetest/minetestmapper
+
+.SH MAN PAGE AUTHOR
+Daniel Moerner
