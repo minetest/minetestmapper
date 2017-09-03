@@ -53,7 +53,7 @@ DBRedis::DBRedis(const std::string &mapdir)
 	}
 	const char *addr = tmp.c_str();
 	int port = stoi64(get_setting_default("redis_port", ifs, "6379"));
-	ctx = redisConnect(addr, port);
+	ctx = tmp.find('/') != std::string::npos ? redisConnectUnix(addr) : redisConnect(addr, port);
 	if(!ctx)
 		throw std::runtime_error("Cannot allocate redis context");
 	else if(ctx->err) {
