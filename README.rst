@@ -54,16 +54,16 @@ Parameters
 ^^^^^^^^^^
 
 bgcolor:
-    Background color of image, e.g. ``--bgcolor #ffffff``
+    Background color of image, e.g. ``--bgcolor '#ffffff'``
 
 scalecolor:
-    Color of scale, e.g. ``--scalecolor #000000``
+    Color of scale, e.g. ``--scalecolor '#000000'``
 
 playercolor:
-    Color of player indicators, e.g. ``--playercolor #ff0000``
+    Color of player indicators, e.g. ``--playercolor '#ff0000'``
 
 origincolor:
-    Color of origin indicator, e.g. ``--origincolor #ff0000``
+    Color of origin indicator, e.g. ``--origincolor '#ff0000'``
 
 drawscale:
     Draw tick marks, ``--drawscale``
