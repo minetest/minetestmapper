@@ -348,8 +348,19 @@ void TileGenerator::createImage()
 	if(!m_drawScale)
 		m_scales = 0;
 
+	int gw = (m_geomX2 - m_geomX) * 16;
+	int gh = (m_geomY2 - m_geomY) * 16;
+
+
 	m_mapWidth = (m_xMax - m_xMin + 1) * 16;
 	m_mapHeight = (m_zMax - m_zMin + 1) * 16;
+
+	if (m_geomX > -2048 && m_geomX2 < 2048)
+		m_mapWidth = m_mapWidth > gw ? m_mapWidth : gw;
+
+	if (m_geomY > -2048 && m_geomY2 < 2048)
+		m_mapHeight = m_mapHeight > gh ? m_mapWidth : gh;
+
 	m_xBorder = (m_scales & SCALE_LEFT) ? scale_d : 0;
 	m_yBorder = (m_scales & SCALE_TOP) ? scale_d : 0;
 	m_blockPixelAttributes.setWidth(m_mapWidth);
