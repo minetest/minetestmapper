@@ -352,8 +352,25 @@ void TileGenerator::createImage()
 	if(!m_drawScale)
 		m_scales = 0;
 
+
+	// If a geometry is explicitly set, set the bounding box to the requested geometry
+	// instead of cropping to the content. This way we will always output a full tile
+	// of the correct size.
+	if (m_geomX > -2048 && m_geomX2 < 2048)
+	{
+		m_xMin = m_geomX;
+		m_xMax = m_geomX2-1;
+	}
+
+	if (m_geomY > -2048 && m_geomY2 < 2048)
+	{
+		m_zMin = m_geomY;
+		m_zMax = m_geomY2-1;
+	}
+
 	m_mapWidth = (m_xMax - m_xMin + 1) * 16;
 	m_mapHeight = (m_zMax - m_zMin + 1) * 16;
+
 	m_xBorder = (m_scales & SCALE_LEFT) ? scale_d : 0;
 	m_yBorder = (m_scales & SCALE_TOP) ? scale_d : 0;
 	m_blockPixelAttributes.setWidth(m_mapWidth);
