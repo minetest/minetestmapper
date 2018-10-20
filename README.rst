@@ -77,6 +77,9 @@ draworigin:
 drawalpha:
     Allow nodes to be drawn with transparency (e.g. water), ``--drawalpha``
 
+extent:
+    Don't output any imagery, just print the extent of the full map, ``--extent``
+
 noshading:
     Don't draw shading on nodes, ``--noshading``
 

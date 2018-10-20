@@ -28,6 +28,7 @@ void usage()
 			"  --max-y <y>\n"
 			"  --backend <backend>\n"
 			"  --geometry x:y+w+h\n"
+			"  --extent\n"
 			"  --zoom <zoomlevel>\n"
 			"  --colors <colors.txt>\n"
 			"  --scales [t][b][l][r]\n"
@@ -80,6 +81,7 @@ int main(int argc, char *argv[])
 		{"noshading", no_argument, 0, 'H'},
 		{"backend", required_argument, 0, 'd'},
 		{"geometry", required_argument, 0, 'g'},
+		{"extent", no_argument, 0, 'E'},
 		{"min-y", required_argument, 0, 'a'},
 		{"max-y", required_argument, 0, 'c'},
 		{"zoom", required_argument, 0, 'z'},
@@ -95,6 +97,7 @@ int main(int argc, char *argv[])
 	TileGenerator generator;
 	int option_index = 0;
 	int c = 0;
+	bool onlyPrintExtent = false;
 	while (1) {
 		c = getopt_long(argc, argv, "hi:o:", long_options, &option_index);
 		if (c == -1) {
@@ -138,6 +141,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'e':
 				generator.setDrawAlpha(true);
+				break;
+			case 'E':
+				onlyPrintExtent = true;
 				break;
 			case 'H':
 				generator.setShading(false);
@@ -206,7 +212,10 @@ int main(int argc, char *argv[])
 		colors = search_colors(input);
 	try {
 		generator.parseColorsFile(colors);
-		generator.generate(input, output);
+		if (onlyPrintExtent)
+			generator.printGeometry(input);
+		else
+			generator.generate(input, output);
 	} catch(std::runtime_error e) {
 		std::cerr << "Exception: " << e.what() << std::endl;
 		return 1;

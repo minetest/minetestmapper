@@ -208,6 +208,23 @@ void TileGenerator::parseColorsFile(const std::string &fileName)
 	parseColorsStream(in);
 }
 
+void TileGenerator::printGeometry(const std::string &input)
+{
+	string input_path = input;
+	if (input_path[input.length() - 1] != PATH_SEPARATOR) {
+		input_path += PATH_SEPARATOR;
+	}
+
+	openDb(input_path);
+	loadBlocks();
+
+	std::cout << "Map extent:" << m_xMin*16 << ":" << m_zMin*16 << "+" << (m_xMax - m_xMin+1)*16 << "+" << (m_zMax - m_zMin+1)*16 << std::endl;
+
+	closeDatabase();
+
+}
+
+
 void TileGenerator::generate(const std::string &input, const std::string &output)
 {
 	string input_path = input;

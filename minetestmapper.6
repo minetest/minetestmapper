@@ -73,6 +73,10 @@ Use specific map backend; supported: *sqlite3*, *leveldb*, *redis*, *postgresql*
 Limit area to specific geometry (*x:y+w+h* where x and y specify the lower left corner), e.g. "--geometry -800:-800+1600+1600"
 
 .TP
+.BR \-\-extent " " \fIextent\fR
+Dont render the image, dust print the extent of the map that would be generated, in the same format as the geometry above.
+
+.TP
 .BR \-\-zoom " " \fIfactor\fR
 Zoom the image by using more than one pixel per node, e.g. "--zoom 4"
 
