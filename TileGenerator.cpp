@@ -79,6 +79,7 @@ TileGenerator::TileGenerator():
 	m_drawScale(false),
 	m_drawAlpha(false),
 	m_shading(true),
+	m_dontWriteEmpty(false),
 	m_backend(""),
 	m_xBorder(0),
 	m_yBorder(0),
@@ -228,6 +229,10 @@ void TileGenerator::printGeometry(const std::string &input)
 
 }
 
+void TileGenerator::setDontWriteEmpty(bool f)
+{
+	m_dontWriteEmpty = f;
+}
 
 void TileGenerator::generate(const std::string &input, const std::string &output)
 {
@@ -238,6 +243,13 @@ void TileGenerator::generate(const std::string &input, const std::string &output
 
 	openDb(input_path);
 	loadBlocks();
+
+	if (m_dontWriteEmpty  && ! m_positions.size())
+	{
+		closeDatabase();
+		return;
+	}
+
 	createImage();
 	renderMap();
 	closeDatabase();

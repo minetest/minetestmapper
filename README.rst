@@ -83,6 +83,9 @@ extent:
 noshading:
     Don't draw shading on nodes, ``--noshading``
 
+noemptyimage:
+    Don't output anything when the image would be empty, ``--noemptyimage``
+
 min-y:
     Don't draw nodes below this y value, e.g. ``--min-y -25``
 

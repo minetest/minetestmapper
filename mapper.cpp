@@ -24,6 +24,7 @@ void usage()
 			"  --draworigin\n"
 			"  --drawalpha\n"
 			"  --noshading\n"
+			"  --noemptyimage\n"
 			"  --min-y <y>\n"
 			"  --max-y <y>\n"
 			"  --backend <backend>\n"
@@ -87,6 +88,7 @@ int main(int argc, char *argv[])
 		{"zoom", required_argument, 0, 'z'},
 		{"colors", required_argument, 0, 'C'},
 		{"scales", required_argument, 0, 'f'},
+		{"noemptyimage", no_argument, 0, 'n'},
 		{0, 0, 0, 0}
 	};
 
@@ -194,6 +196,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'C':
 				colors = optarg;
+				break;
+			case 'n':
+				generator.setDontWriteEmpty(true);
 				break;
 			default:
 				exit(1);

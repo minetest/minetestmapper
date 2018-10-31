@@ -89,6 +89,7 @@ public:
 	void printGeometry(const std::string &input);
 	void setZoom(int zoom);
 	void setScales(uint flags);
+	void setDontWriteEmpty(bool f);
 
 private:
 	void parseColorsStream(std::istream &in);
@@ -120,6 +121,7 @@ private:
 	bool m_drawScale;
 	bool m_drawAlpha;
 	bool m_shading;
+	bool m_dontWriteEmpty;
 	std::string m_backend;
 	int m_xBorder, m_yBorder;
 
