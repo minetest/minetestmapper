@@ -65,10 +65,8 @@ minetest.register_chatcommand("dumpnodes", {
 ==FILE== avgcolor.py
 #!/usr/bin/env python
 import sys
+from math import sqrt
 from PIL import Image
-
-def tadd(a, b):
-	return tuple(sum(e) for e in zip(a, b))
 
 if len(sys.argv) < 2:
 	print("Prints average color (RGB) of input image")
@@ -78,20 +76,20 @@ if len(sys.argv) < 2:
 inp = Image.open(sys.argv[1]).convert('RGBA')
 ind = inp.load()
 
-cl = (0, 0, 0)
-counted = 0
+cl = ([], [], [])
 for x in range(inp.size[0]):
 	for y in range(inp.size[1]):
 		px = ind[x, y]
 		if px[3] < 128: continue # alpha
-		cl = tadd(cl, px[:3])
-		counted += 1
+		cl[0].append(px[0]**2)
+		cl[1].append(px[1]**2)
+		cl[2].append(px[2]**2)
 
-if counted == 0:
-	sys.stderr.write("did not find avg color for %s\n" % sys.argv[1])
+if len(cl[0]) == 0:
+	print("Didn't find average color for %s" % sys.argv[1], file=sys.stderr)
 	print("0 0 0")
 else:
-	cl = tuple(int(n / counted) for n in cl)
+	cl = tuple(sqrt(sum(x)/len(x)) for x in cl)
 	print("%d %d %d" % cl)
 ==SCRIPT==
 #!/bin/bash -e
