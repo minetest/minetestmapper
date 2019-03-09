@@ -125,6 +125,7 @@ sed -re 's/^xpanes:(.*(pane|bar)[^ ]*) ([0-9 ]+)$/xpanes:\1 \3 64 16/g' $COLORST
 # Delete some usually hidden nodes:
 sed '/^doors:hidden /d' $COLORSTXT_PATH -i
 sed '/^fireflies:firefly /d' $COLORSTXT_PATH -i
+sed '/^butterflies:butterfly_/d' $COLORSTXT_PATH -i
 ==INSTRUCTIONS==
 1) Make sure avgcolors.py works (outputs the usage instructions when run)
 2) Add the dumpnodes mod to Minetest
