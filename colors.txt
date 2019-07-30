@@ -65,10 +65,12 @@ default:diamondblock 140 218 223
 default:dirt 97 67 43
 default:dirt_with_coniferous_litter 109 90 71
 default:dirt_with_dry_grass 187 148 78
-default:dirt_with_grass 66 112 31
-default:dirt_with_grass_footsteps 66 112 31
+default:dirt_with_grass 64 111 26
+default:dirt_with_grass_footsteps 64 111 26
 default:dirt_with_rainforest_litter 76 39 10
 default:dirt_with_snow 225 225 238
+default:dry_dirt 178 136 90
+default:dry_dirt_with_dry_grass 187 148 78
 default:dry_grass_1 208 172 87
 default:dry_grass_2 210 174 87
 default:dry_grass_3 210 174 87
@@ -123,9 +125,9 @@ default:obsidian_block 23 25 30
 default:obsidian_glass 20 23 27 64 16
 default:obsidianbrick 23 25 29
 default:papyrus 97 134 38
-default:permafrost 37 27 22
+default:permafrost 71 66 61
 default:permafrost_with_moss 108 150 51
-default:permafrost_with_stones 37 27 22
+default:permafrost_with_stones 71 66 61
 default:pine_bush_needles 16 50 19
 default:pine_bush_sapling 58 51 40
 default:pine_bush_stem 73 62 53
@@ -189,9 +191,9 @@ doors:gate_pine_wood_open 221 185 130
 doors:gate_wood_closed 131 102 57
 doors:gate_wood_open 131 102 57
 doors:trapdoor 130 100 51
-doors:trapdoor_open 137 107 60
+doors:trapdoor_open 68 53 30
 doors:trapdoor_steel 200 200 200
-doors:trapdoor_steel_open 206 206 206
+doors:trapdoor_steel_open 97 97 97
 
 # farming
 farming:cotton_1 89 117 39
@@ -204,6 +206,8 @@ farming:cotton_7 94 70 37
 farming:cotton_8 122 108 93
 farming:desert_sand_soil 161 132 72
 farming:desert_sand_soil_wet 120 99 53
+farming:dry_soil 178 136 90
+farming:dry_soil_wet 178 136 90
 farming:seed_cotton 92 87 60
 farming:seed_wheat 177 161 96
 farming:soil 97 67 43
@@ -237,6 +241,7 @@ flowers:tulip 156 101 44
 flowers:tulip_black 78 120 72
 flowers:viola 115 69 184
 flowers:waterlily 107 160 68
+flowers:waterlily_waving 107 160 68
 
 # stairs
 stairs:slab_acacia_wood 150 61 39
