@@ -2,20 +2,8 @@ language: cpp
 compiler:
   - gcc
   - clang
-sudo: false
-dist: trusty
-addons:
-  apt:
-    sources:
-      - llvm-toolchain-trusty-5.0
-      - ubuntu-toolchain-r-test
-    packages:
-      - cmake
-      - libgd2-dev
-      - libsqlite3-dev
-      - libleveldb-dev
-      - g++-7
-      - clang-5.0
+dist: bionic
+before_install: sudo apt-get install -y cmake libgd-dev libsqlite3-dev libleveldb-dev
 script: ./util/travis/script.sh
 notifications:
   email: false
