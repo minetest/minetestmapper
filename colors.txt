@@ -430,8 +430,12 @@ wool:yellow 254 226 16
 # xpanes
 xpanes:bar 114 114 114 64 16
 xpanes:bar_flat 114 114 114 64 16
+xpanes:door_steel_bar_a 133 133 133 64 16
+xpanes:door_steel_bar_b 133 133 133 64 16
 xpanes:obsidian_pane 16 17 18 64 16
 xpanes:obsidian_pane_flat 16 17 18 64 16
 xpanes:pane 249 249 249 64 16
 xpanes:pane_flat 249 249 249 64 16
+xpanes:trapdoor_steel_bar 127 127 127 64 16
+xpanes:trapdoor_steel_bar_open 77 77 77 64 16
 
