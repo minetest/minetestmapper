@@ -56,6 +56,8 @@ struct BitmapThing { // 16x16 bitmap
 	uint16_t val[16];
 };
 
+typedef std::list<std::pair<int, int> > PositionsList;
+
 
 class TileGenerator
 {
@@ -63,9 +65,11 @@ private:
 #if __cplusplus >= 201103L
 	typedef std::unordered_map<std::string, ColorEntry> ColorMap;
 	typedef std::unordered_set<std::string> NameSet;
+	typedef std::unordered_map<int, PositionsList> TileMap;
 #else
 	typedef std::map<std::string, ColorEntry> ColorMap;
 	typedef std::set<std::string> NameSet;
+	typedef std::map<int, PositionsList> TileMap;
 #endif
 
 public:
@@ -81,6 +85,7 @@ public:
 	void setDrawAlpha(bool drawAlpha);
 	void setShading(bool shading);
 	void setGeometry(int x, int y, int w, int h);
+	void setTileSize(int w, int h);
 	void setMinY(int y);
 	void setMaxY(int y);
 	void parseColorsFile(const std::string &fileName);
@@ -90,6 +95,7 @@ public:
 	void setZoom(int zoom);
 	void setScales(uint flags);
 	void setDontWriteEmpty(bool f);
+	void sortPositionsIntoTiles();
 
 private:
 	void parseColorsStream(std::istream &in);
@@ -97,8 +103,8 @@ private:
 	void closeDatabase();
 	void loadBlocks();
 	void createImage();
-	void renderMap();
-	std::list<int> getZValueList() const;
+	void renderMap(PositionsList &positions);
+	std::list<int> getZValueList(PositionsList &positions) const;
 	void renderMapBlock(const BlockDecoder &blk, const BlockPos &pos);
 	void renderMapBlockBottom(const BlockPos &pos);
 	void renderShading(int zPos);
@@ -138,15 +144,22 @@ private:
 	int m_geomY;
 	int m_geomX2;
 	int m_geomY2;
+	int m_tileW;
+	int m_tileH;
 	int m_mapWidth;
 	int m_mapHeight;
-	std::list<std::pair<int, int> > m_positions;
+
 	ColorMap m_colorMap;
 	BitmapThing m_readPixels;
 	BitmapThing m_readInfo;
 	NameSet m_unknownNodes;
 	Color m_color[16][16];
 	uint8_t m_thickness[16][16];
+
+	PositionsList m_positions;
+
+	TileMap m_tiles;
+	int m_numTilesX, m_numTilesY;
 
 	int m_zoom;
 	uint m_scales;

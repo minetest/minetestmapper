@@ -98,6 +98,11 @@ backend:
 geometry:
     Limit area to specific geometry (*x:z+w+h* where x and z specify the lower left corner), e.g. ``--geometry -800:-800+1600+1600``
 
+tilesize:
+    Don't output one big image, but output tiles of the specified size, e.g. "--tilesize 128x128". The sizes will be rounded to
+    a multiple of 16. The filenames will be created in the form <x>_<y>_<filename>, where <x> and <y>
+    are the tile numbers and <filename> is the name specified with -o. Skip empty tiles by also specifying --noemptyimage.
+
 zoom:
     Apply zoom to drawn nodes by enlarging them to n*n squares, e.g. ``--zoom 4``
 

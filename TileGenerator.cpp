@@ -95,6 +95,8 @@ TileGenerator::TileGenerator():
 	m_geomY(-2048),
 	m_geomX2(2048),
 	m_geomY2(2048),
+	m_tileW(INT_MAX),
+	m_tileH(INT_MAX),
 	m_zoom(1),
 	m_scales(SCALE_LEFT | SCALE_TOP)
 {
@@ -190,6 +192,13 @@ void TileGenerator::setGeometry(int x, int y, int w, int h)
 	m_geomY2 = round_multiple_nosign(y + h, 16) / 16;
 }
 
+void TileGenerator::setTileSize(int w, int h)
+{
+	m_tileW = round_multiple_nosign(w, 16) / 16;
+	m_tileH = round_multiple_nosign(h, 16) / 16;
+}
+
+
 void TileGenerator::setMinY(int y)
 {
 	m_yMin = y;
@@ -251,19 +260,95 @@ void TileGenerator::generate(const std::string &input, const std::string &output
 	}
 
 	createImage();
-	renderMap();
+
+
+	if (m_tileW < INT_MAX || m_tileH < INT_MAX)
+	{
+		m_xMin = round_multiple_nosign(m_xMin, m_tileW);
+		m_zMin = round_multiple_nosign(m_zMin, m_tileH);
+		int minTileX = m_xMin / m_tileW;
+		int minTileY = m_zMin / m_tileH;
+
+		sortPositionsIntoTiles();
+
+		int trueXMin = m_xMin;
+		int trueZMin = m_zMin;
+
+		// write info about the number of tiles and the tile sizes to a text file
+		// which can be used by another utility to generate zoom pyramids and/or
+		// add map annotations for a specific viewer.
+		std::ostringstream mfn;
+		mfn << "metadata_" << output << ".txt";
+		std::ofstream mf;
+
+		mf.open(mfn.str().c_str());
+
+		if (mf.is_open())
+		{
+
+			mf << "BaseName: " << output << std::endl;
+			mf << "NumTiles: " << m_numTilesX << " " << m_numTilesY << std::endl;
+			mf << "MinTile: " << minTileX << " " << minTileY << std::endl;
+			mf << "TileSize: " << (m_tileW*16) << " " << (m_tileH*16) << std::endl;
+			mf << "Zoom: " << m_zoom << std::endl;
+			mf.close();
+		}
+		else
+		{
+			std::cerr << "Warning: could not write to '" << mfn.str() << "'!" << std::endl;
+		}
+
+		for (int x = 0; x < m_numTilesX; x++)
+		{
+			for (int y = 0; y < m_numTilesY; y++)
+			{
+				TileMap::iterator t = m_tiles.find(x + (y << 16));
+				m_xMin = trueXMin + x * m_tileW;
+				m_zMin = trueZMin + y * m_tileH;
+				m_xMax = m_xMin + m_tileW - 1;
+				m_zMax = m_zMin + m_tileH -1;
+
+				if (t != m_tiles.end() || !m_dontWriteEmpty)
+				{
+					m_image->fill(m_bgColor);
+					if (t != m_tiles.end())
+						renderMap(t->second);
+					if (m_drawScale) {
+						renderScale();
+					}
+					if (m_drawOrigin) {
+						renderOrigin();
+					}
+					if (m_drawPlayers) {
+						renderPlayers(input_path);
+					}
+					ostringstream fn;
+					fn << "tile_" << (x + minTileX) << '_' << (y + minTileY) << '_' << output;
+					writeImage(fn.str());
+				}
+			}
+		}
+	}
+	else
+	{
+		m_image->fill(m_bgColor);
+		renderMap(m_positions);
+		if (m_drawScale) {
+			renderScale();
+		}
+		if (m_drawOrigin) {
+			renderOrigin();
+		}
+		if (m_drawPlayers) {
+			renderPlayers(input_path);
+		}
+		writeImage(output);
+	}
 	closeDatabase();
-	if (m_drawScale) {
-		renderScale();
-	}
-	if (m_drawOrigin) {
-		renderOrigin();
-	}
-	if (m_drawPlayers) {
-		renderPlayers(input_path);
-	}
-	writeImage(output);
 	printUnknown();
+
+	delete m_image;
+	m_image = NULL;
 }
 
 void TileGenerator::parseColorsStream(std::istream &in)
@@ -380,8 +465,17 @@ void TileGenerator::createImage()
 		m_zMax = m_geomY2-1;
 	}
 
-	m_mapWidth = (m_xMax - m_xMin + 1) * 16;
-	m_mapHeight = (m_zMax - m_zMin + 1) * 16;
+	m_mapWidth = (m_xMax - m_xMin + 1);
+	m_mapHeight = (m_zMax - m_zMin + 1);
+
+	if (m_tileW < INT_MAX)
+		m_mapWidth = m_tileW;
+
+	if (m_tileH < INT_MAX)
+		m_mapHeight = m_tileH;
+
+	m_mapWidth *= 16;
+	m_mapHeight *= 16;
 
 	m_xBorder = (m_scales & SCALE_LEFT) ? scale_d : 0;
 	m_yBorder = (m_scales & SCALE_TOP) ? scale_d : 0;
@@ -401,15 +495,15 @@ void TileGenerator::createImage()
 	m_image->drawFilledRect(0, 0, image_width, image_height, m_bgColor); // Background
 }
 
-void TileGenerator::renderMap()
+void TileGenerator::renderMap(PositionsList &positions)
 {
 	BlockDecoder blk;
-	std::list<int> zlist = getZValueList();
+	std::list<int> zlist = getZValueList(positions);
 	for (std::list<int>::iterator zPosition = zlist.begin(); zPosition != zlist.end(); ++zPosition) {
 		int zPos = *zPosition;
 		std::map<int16_t, BlockList> blocks;
 		m_db->getBlocksOnZ(blocks, zPos);
-		for (std::list<std::pair<int, int> >::const_iterator position = m_positions.begin(); position != m_positions.end(); ++position) {
+		for (PositionsList::const_iterator position = positions.begin(); position != positions.end(); ++position) {
 			if (position->second != zPos)
 				continue;
 
@@ -637,9 +731,12 @@ void TileGenerator::renderPlayers(const std::string &inputPath)
 {
 	PlayerAttributes players(inputPath);
 	for (PlayerAttributes::Players::iterator player = players.begin(); player != players.end(); ++player) {
-		if (player->x < m_xMin * 16 || player->x > m_xMax * 16 ||
-			player->z < m_zMin * 16 || player->z > m_zMax * 16)
+		if (player->x < m_xMin*16 || player->x > m_xMax * 16 ||
+			player->z < m_zMin*16 || player->z > m_zMax * 16 )
+		{
 			continue;
+
+		}
 		if (player->y < m_yMin || player->y > m_yMax)
 			continue;
 		int imageX = getImageX(player->x, true),
@@ -651,10 +748,10 @@ void TileGenerator::renderPlayers(const std::string &inputPath)
 	}
 }
 
-inline std::list<int> TileGenerator::getZValueList() const
+inline std::list<int> TileGenerator::getZValueList(PositionsList &positions) const
 {
 	std::list<int> zlist;
-	for (std::list<std::pair<int, int> >::const_iterator position = m_positions.begin(); position != m_positions.end(); ++position)
+	for (PositionsList::const_iterator position = positions.begin(); position != positions.end(); ++position)
 		zlist.push_back(position->second);
 	zlist.sort();
 	zlist.unique();
@@ -665,8 +762,7 @@ inline std::list<int> TileGenerator::getZValueList() const
 void TileGenerator::writeImage(const std::string &output)
 {
 	m_image->save(output);
-	delete m_image;
-	m_image = NULL;
+	cout << "wrote image:" << output << endl;
 }
 
 void TileGenerator::printUnknown()
@@ -696,3 +792,30 @@ inline void TileGenerator::setZoomed(int x, int y, Color color)
 {
 	m_image->drawFilledRect(getImageX(x), getImageY(y), m_zoom, m_zoom, color);
 }
+
+
+void TileGenerator::sortPositionsIntoTiles()
+{
+	m_numTilesX = round_multiple_nosign(m_xMax - m_xMin + 1, m_tileW) / m_tileW;
+	m_numTilesY = round_multiple_nosign(m_zMax - m_zMin + 1, m_tileH) / m_tileH;
+
+	for (PositionsList::iterator p = m_positions.begin(); p != m_positions.end(); p++)
+	{
+		int xtile = (p->first - m_xMin) / m_tileW;
+		int ytile = (p->second - m_zMin) / m_tileH;
+
+		int key = xtile + (ytile << 16);
+
+		TileMap::iterator t = m_tiles.find(key);
+
+		if (t == m_tiles.end())
+		{
+			PositionsList l;
+			m_tiles.insert(std::pair<int, PositionsList>(key, l));
+			t = m_tiles.find(key);
+		}
+
+		t->second.push_back(std::pair<int, int>(p->first, p->second));
+	}
+}
+

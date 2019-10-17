@@ -29,6 +29,7 @@ void usage()
 			"  --max-y <y>\n"
 			"  --backend <backend>\n"
 			"  --geometry x:y+w+h\n"
+			"  --tilesize wxh\n"
 			"  --extent\n"
 			"  --zoom <zoomlevel>\n"
 			"  --colors <colors.txt>\n"
@@ -82,6 +83,7 @@ int main(int argc, char *argv[])
 		{"noshading", no_argument, 0, 'H'},
 		{"backend", required_argument, 0, 'd'},
 		{"geometry", required_argument, 0, 'g'},
+		{"tilesize", required_argument, 0, 't'},
 		{"extent", no_argument, 0, 'E'},
 		{"min-y", required_argument, 0, 'a'},
 		{"max-y", required_argument, 0, 'c'},
@@ -172,6 +174,18 @@ int main(int argc, char *argv[])
 						exit(1);
 					}
 					generator.setGeometry(x, y, w, h);
+				}
+				break;
+			case 't': {
+					std::istringstream geometry(optarg);
+					int w, h;
+					char c;
+					geometry >> w >> c >> h;
+					if (geometry.fail() || c != 'x' || w < 1 || h < 1) {
+						usage();
+						exit(1);
+					}
+					generator.setTileSize(w, h);
 				}
 				break;
 			case 'f': {

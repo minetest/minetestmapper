@@ -26,6 +26,7 @@ public:
 	void drawFilledRect(int x, int y, int w, int h, const Color &c);
 	void drawCircle(int x, int y, int diameter, const Color &c);
 	void save(const std::string &filename);
+	void fill(Color &c);
 
 private:
 	Image(const Image&);

@@ -77,6 +77,12 @@ Use specific map backend; supported: *sqlite3*, *leveldb*, *redis*, *postgresql*
 Limit area to specific geometry (*x:y+w+h* where x and y specify the lower left corner), e.g. "--geometry -800:-800+1600+1600"
 
 .TP
+.BR \-\-tilesize " " \fItilesize\fR
+Don't output one big image, but output tiles of the specified size, e.g. "--tilesize 128x128". The sizes will be rounded to
+a multiple of 16. The filenames will be created in the form <x>_<y>_<filename>, where <x> and <y>
+are the tile numbers and <filename> is the name specified with -o. Skip empty tiles by also specifying --noemptyimage.
+
+.TP
 .BR \-\-extent " " \fIextent\fR
 Don't render the image, just print the extent of the map that would be generated, in the same format as the geometry above.
 
