@@ -60,13 +60,13 @@ void DBLevelDB::getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zPos)
 	std::string datastr;
 	leveldb::Status status;
 
-	for (std::vector<BlockPos>::iterator it = posCache.begin(); it != posCache.end(); ++it) {
-		if (it->z != zPos) {
+	for (const auto &it : posCache) {
+		if (it.z != zPos) {
 			continue;
 		}
-		status = db->Get(leveldb::ReadOptions(), i64tos(encodeBlockPos(*it)), &datastr);
+		status = db->Get(leveldb::ReadOptions(), i64tos(encodeBlockPos(it)), &datastr);
 		if (status.ok()) {
-			Block b(*it, ustring((const unsigned char *) datastr.data(), datastr.size()));
+			Block b(it, ustring((const unsigned char *) datastr.data(), datastr.size()));
 			blocks[b.first.x].push_back(b);
 		}
 	}

@@ -270,7 +270,7 @@ void TileGenerator::parseColorsStream(std::istream &in)
 {
 	char line[128];
 	while (in.good()) {
-		in.getline(line, 128);
+		in.getline(line, sizeof(line));
 
 		for(char *p = line; *p; p++) {
 			if(*p != '#')
@@ -281,7 +281,7 @@ void TileGenerator::parseColorsStream(std::istream &in)
 		if(strlen(line) == 0)
 			continue;
 
-		char name[64 + 1];
+		char name[64 + 1] = {0};
 		unsigned int r, g, b, a, t;
 		a = 255;
 		t = 0;
@@ -291,7 +291,7 @@ void TileGenerator::parseColorsStream(std::istream &in)
 			continue;
 		}
 	
-		ColorEntry color = ColorEntry(r, g, b, a, t);
+		ColorEntry color(r, g, b, a, t);
 		m_colorMap[name] = color;
 	}
 }
@@ -352,7 +352,7 @@ void TileGenerator::loadBlocks()
 			m_zMin = pos.z;
 		if (pos.z > m_zMax)
 			m_zMax = pos.z;
-		m_positions.push_back(std::pair<int, int>(pos.x, pos.z));
+		m_positions.push_back(std::make_pair(pos.x, pos.z));
 	}
 	m_positions.sort();
 	m_positions.unique();
@@ -393,10 +393,11 @@ void TileGenerator::createImage()
 	image_height = (m_mapHeight * m_zoom) + m_yBorder;
 	image_height += (m_scales & SCALE_BOTTOM) ? scale_d : 0;
 
-	if(image_width > 4096 || image_height > 4096)
+	if(image_width > 4096 || image_height > 4096) {
 		std::cerr << "Warning: The width or height of the image to be created exceeds 4096 pixels!"
 			<< " (Dimensions: " << image_width << "x" << image_height << ")"
 			<< std::endl;
+	}
 	m_image = new Image(image_width, image_height);
 	m_image->drawFilledRect(0, 0, image_width, image_height, m_bgColor); // Background
 }
@@ -404,13 +405,12 @@ void TileGenerator::createImage()
 void TileGenerator::renderMap()
 {
 	BlockDecoder blk;
-	std::list<int> zlist = getZValueList();
-	for (std::list<int>::iterator zPosition = zlist.begin(); zPosition != zlist.end(); ++zPosition) {
-		int zPos = *zPosition;
+	std::list<int16_t> zlist = getZValueList();
+	for (int16_t zPos : zlist) {
 		std::map<int16_t, BlockList> blocks;
 		m_db->getBlocksOnZ(blocks, zPos);
-		for (std::list<std::pair<int, int> >::const_iterator position = m_positions.begin(); position != m_positions.end(); ++position) {
-			if (position->second != zPos)
+		for (const auto position : m_positions) {
+			if (position.second != zPos)
 				continue;
 
 			m_readPixels.reset();
@@ -423,14 +423,14 @@ void TileGenerator::renderMap()
 				}
 			}
 
-			int xPos = position->first;
+			int16_t xPos = position.first;
 			blocks[xPos].sort();
 			const BlockList &blockStack = blocks[xPos];
-			for (BlockList::const_iterator it = blockStack.begin(); it != blockStack.end(); ++it) {
-				const BlockPos &pos = it->first;
+			for (const auto &it : blockStack) {
+				const BlockPos &pos = it.first;
 
 				blk.reset();
-				blk.decode(it->second);
+				blk.decode(it.second);
 				if (blk.isEmpty())
 					continue;
 				renderMapBlock(blk, pos);
@@ -636,26 +636,26 @@ void TileGenerator::renderOrigin()
 void TileGenerator::renderPlayers(const std::string &inputPath)
 {
 	PlayerAttributes players(inputPath);
-	for (PlayerAttributes::Players::iterator player = players.begin(); player != players.end(); ++player) {
-		if (player->x < m_xMin * 16 || player->x > m_xMax * 16 ||
-			player->z < m_zMin * 16 || player->z > m_zMax * 16)
+	for (auto &player : players) {
+		if (player.x < m_xMin * 16 || player.x > m_xMax * 16 ||
+			player.z < m_zMin * 16 || player.z > m_zMax * 16)
 			continue;
-		if (player->y < m_yMin || player->y > m_yMax)
+		if (player.y < m_yMin || player.y > m_yMax)
 			continue;
-		int imageX = getImageX(player->x, true),
-			imageY = getImageY(player->z, true);
+		int imageX = getImageX(player.x, true),
+			imageY = getImageY(player.z, true);
 
 		m_image->drawFilledRect(imageX - 1, imageY, 3, 1, m_playerColor);
 		m_image->drawFilledRect(imageX, imageY - 1, 1, 3, m_playerColor);
-		m_image->drawText(imageX + 2, imageY, player->name, m_playerColor);
+		m_image->drawText(imageX + 2, imageY, player.name, m_playerColor);
 	}
 }
 
-inline std::list<int> TileGenerator::getZValueList() const
+inline std::list<int16_t> TileGenerator::getZValueList() const
 {
-	std::list<int> zlist;
-	for (std::list<std::pair<int, int> >::const_iterator position = m_positions.begin(); position != m_positions.end(); ++position)
-		zlist.push_back(position->second);
+	std::list<int16_t> zlist;
+	for (const auto position : m_positions)
+		zlist.push_back(position.second);
 	zlist.sort();
 	zlist.unique();
 	zlist.reverse();
@@ -674,8 +674,8 @@ void TileGenerator::printUnknown()
 	if (m_unknownNodes.size() == 0)
 		return;
 	std::cerr << "Unknown nodes:" << std::endl;
-	for (NameSet::iterator node = m_unknownNodes.begin(); node != m_unknownNodes.end(); ++node)
-		std::cerr << "\t" << *node << std::endl;
+	for (const auto &node : m_unknownNodes)
+		std::cerr << "\t" << node << std::endl;
 }
 
 inline int TileGenerator::getImageX(int val, bool absolute) const

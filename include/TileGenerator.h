@@ -4,13 +4,8 @@
 #include <iosfwd>
 #include <list>
 #include <config.h>
-#if __cplusplus >= 201103L
 #include <unordered_map>
 #include <unordered_set>
-#else
-#include <map>
-#include <set>
-#endif
 #include <stdint.h>
 #include <string>
 
@@ -60,13 +55,8 @@ struct BitmapThing { // 16x16 bitmap
 class TileGenerator
 {
 private:
-#if __cplusplus >= 201103L
 	typedef std::unordered_map<std::string, ColorEntry> ColorMap;
 	typedef std::unordered_set<std::string> NameSet;
-#else
-	typedef std::map<std::string, ColorEntry> ColorMap;
-	typedef std::set<std::string> NameSet;
-#endif
 
 public:
 	TileGenerator();
@@ -98,7 +88,7 @@ private:
 	void loadBlocks();
 	void createImage();
 	void renderMap();
-	std::list<int> getZValueList() const;
+	std::list<int16_t> getZValueList() const;
 	void renderMapBlock(const BlockDecoder &blk, const BlockPos &pos);
 	void renderMapBlockBottom(const BlockPos &pos);
 	void renderShading(int zPos);
@@ -140,7 +130,7 @@ private:
 	int m_geomY2;
 	int m_mapWidth;
 	int m_mapHeight;
-	std::list<std::pair<int, int> > m_positions;
+	std::list<std::pair<int16_t, int16_t>> m_positions;
 	ColorMap m_colorMap;
 	BitmapThing m_readPixels;
 	BitmapThing m_readInfo;

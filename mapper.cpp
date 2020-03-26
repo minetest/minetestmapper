@@ -10,7 +10,7 @@
 #include "cmake_config.h"
 #include "TileGenerator.h"
 
-void usage()
+static void usage()
 {
 	const char *usage_text = "minetestmapper [options]\n"
 			"  -i/--input <world_path>\n"
@@ -37,13 +37,13 @@ void usage()
 	std::cout << usage_text;
 }
 
-bool file_exists(const std::string &path)
+static bool file_exists(const std::string &path)
 {
 	std::ifstream ifs(path.c_str());
 	return ifs.is_open();
 }
 
-std::string search_colors(const std::string &worldpath)
+static std::string search_colors(const std::string &worldpath)
 {
 	if(file_exists(worldpath + "/colors.txt"))
 		return worldpath + "/colors.txt";
@@ -57,7 +57,8 @@ std::string search_colors(const std::string &worldpath)
 	}
 #endif
 
-	if(!(SHAREDIR[0] == '.' || SHAREDIR[0] == '\0') && file_exists(SHAREDIR "/colors.txt"))
+	constexpr bool sharedir_valid = !(SHAREDIR[0] == '.' || SHAREDIR[0] == '\0');
+	if(sharedir_valid && file_exists(SHAREDIR "/colors.txt"))
 		return SHAREDIR "/colors.txt";
 
 	std::cerr << "Warning: Falling back to using colors.txt from current directory." << std::endl;
@@ -66,7 +67,7 @@ std::string search_colors(const std::string &worldpath)
 
 int main(int argc, char *argv[])
 {
-	static struct option long_options[] =
+	const static struct option long_options[] =
 	{
 		{"help", no_argument, 0, 'h'},
 		{"input", required_argument, 0, 'i'},
