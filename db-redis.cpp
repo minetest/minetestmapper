@@ -130,6 +130,7 @@ void DBRedis::HMGET(const std::vector<BlockPos> &positions,
 
 	std::vector<BlockPos>::const_iterator position = positions.begin();
 	std::size_t remaining = positions.size();
+	std::size_t abs_i = 0;
 	while (remaining > 0) {
 		const std::size_t batch_size =
 			(remaining > DB_REDIS_HMGET_NUMFIELDS) ? DB_REDIS_HMGET_NUMFIELDS : remaining;
@@ -161,9 +162,10 @@ void DBRedis::HMGET(const std::vector<BlockPos> &positions,
 				REPLY_TYPE_ERR(subreply, "HMGET subreply");
 			if (subreply->len == 0)
 				throw std::runtime_error("HMGET empty string");
-			result(i, ustring((const unsigned char *) subreply->str, subreply->len));
+			result(abs_i + i, ustring((const unsigned char *) subreply->str, subreply->len));
 		}
 		freeReplyObject(reply);
+		abs_i += reply->elements;
 		remaining -= batch_size;
 	}
 }
