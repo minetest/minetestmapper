@@ -563,7 +563,7 @@ void TileGenerator::renderMapBlock(const BlockDecoder &blk, const BlockPos &pos)
 	int xBegin = (pos.x - m_xMin) * 16;
 	int zBegin = (m_zMax - pos.z) * 16;
 	int minY = (pos.y * 16 > m_yMin) ? 0 : m_yMin - pos.y * 16;
-	int maxY = (pos.y * 16 < m_yMax) ? 15 : m_yMax - pos.y * 16;
+	int maxY = (pos.y * 16 + 15 < m_yMax) ? 15 : m_yMax - pos.y * 16;
 	for (int z = 0; z < 16; ++z) {
 		int imageY = zBegin + 15 - z;
 		for (int x = 0; x < 16; ++x) {
