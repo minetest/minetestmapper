@@ -8,8 +8,7 @@
  */
 
 #include "PixelAttributes.h"
-
-using namespace std;
+#include <cstring>
 
 PixelAttributes::PixelAttributes():
 	m_width(0)
@@ -35,9 +34,10 @@ void PixelAttributes::setWidth(int width)
 
 void PixelAttributes::scroll()
 {
-	*m_pixelAttributes[FirstLine] = *m_pixelAttributes[LastLine];
+	size_t lineLength = m_width * sizeof(PixelAttribute);
+	memcpy(m_pixelAttributes[FirstLine], m_pixelAttributes[LastLine], lineLength);
 	for (size_t i = 1; i < LineCount - 1; ++i) {
-		*m_pixelAttributes[i] = *m_pixelAttributes[EmptyLine];
+		memcpy(m_pixelAttributes[i], m_pixelAttributes[EmptyLine], lineLength);
 	}
 }
 
