@@ -10,7 +10,7 @@ inline std::string read_setting_default(const std::string &name, std::istream &i
 {
 	try {
 		return read_setting(name, is);
-	} catch(std::runtime_error &e) {
+	} catch(const std::runtime_error &e) {
 		return def;
 	}
 }
