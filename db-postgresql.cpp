@@ -38,6 +38,11 @@ DBPostgreSQL::DBPostgreSQL(const std::string &mapdir)
 		" posX = $1::int4 AND posZ = $2::int4"
 		" AND (posY BETWEEN $3::int4 AND $4::int4)"
 	);
+	prepareStatement(
+		"get_block_exact",
+		"SELECT data FROM blocks WHERE"
+		" posX = $1::int4 AND posY = $2::int4 AND posZ = $3::int4"
+	);
 
 	checkResults(PQexec(db, "START TRANSACTION;"));
 	checkResults(PQexec(db, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;"));
@@ -48,11 +53,12 @@ DBPostgreSQL::~DBPostgreSQL()
 {
 	try {
 		checkResults(PQexec(db, "COMMIT;"));
-	} catch (std::exception& caught) {
+	} catch (const std::exception& caught) {
 		std::cerr << "could not finalize: " << caught.what() << std::endl;
 	}
 	PQfinish(db);
 }
+
 
 std::vector<BlockPos> DBPostgreSQL::getBlockPos(BlockPos min, BlockPos max)
 {
@@ -123,6 +129,43 @@ void DBPostgreSQL::getBlocksOnXZ(BlockList &blocks, int16_t xPos, int16_t zPos,
 
 	PQclear(results);
 }
+
+
+void DBPostgreSQL::getBlocksByPos(BlockList &blocks,
+			const std::vector<BlockPos> &positions)
+{
+	int32_t x, y, z;
+
+	const void *args[] = { &x, &y, &z };
+	const int argLen[] = { 4, 4, 4 };
+	const int argFmt[] = { 1, 1, 1 };
+
+	for (auto pos : positions) {
+		x = htonl(pos.x);
+		y = htonl(pos.y);
+		z = htonl(pos.z);
+
+		PGresult *results = execPrepared(
+			"get_block_exact", ARRLEN(args), args,
+			argLen, argFmt, false
+		);
+
+		if (PQntuples(results) > 0) {
+			blocks.emplace_back(
+				pos,
+				ustring(
+					reinterpret_cast<unsigned char*>(
+						PQgetvalue(results, 0, 0)
+					),
+					PQgetlength(results, 0, 0)
+				)
+			);
+		}
+
+		PQclear(results);
+	}
+}
+
 
 PGresult *DBPostgreSQL::checkResults(PGresult *res, bool clear)
 {

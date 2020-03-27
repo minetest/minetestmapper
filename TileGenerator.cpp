@@ -96,6 +96,7 @@ TileGenerator::TileGenerator():
 	m_geomY(-2048),
 	m_geomX2(2048),
 	m_geomY2(2048),
+	m_exhaustiveSearch(EXH_AUTO),
 	m_zoom(1),
 	m_scales(SCALE_LEFT | SCALE_TOP)
 {
@@ -206,6 +207,11 @@ void TileGenerator::setMaxY(int y)
 		std::swap(m_yMin, m_yMax);
 }
 
+void TileGenerator::setExhaustiveSearch(int mode)
+{
+	m_exhaustiveSearch = mode;
+}
+
 void TileGenerator::parseColorsFile(const std::string &fileName)
 {
 	ifstream in;
@@ -222,6 +228,7 @@ void TileGenerator::printGeometry(const std::string &input)
 		input_path += PATH_SEPARATOR;
 	}
 
+	setExhaustiveSearch(EXH_NEVER);
 	openDb(input_path);
 	loadBlocks();
 
@@ -247,6 +254,8 @@ void TileGenerator::generate(const std::string &input, const std::string &output
 		input_path += PATH_SEPARATOR;
 	}
 
+	if (m_dontWriteEmpty) // FIXME: possible too, just needs to be done differently
+		setExhaustiveSearch(EXH_NEVER);
 	openDb(input_path);
 	loadBlocks();
 
@@ -329,6 +338,35 @@ void TileGenerator::openDb(const std::string &input)
 #endif
 	else
 		throw std::runtime_error(((std::string) "Unknown map backend: ") + backend);
+
+	// Determine how we're going to traverse the database (heuristic)
+	if (m_exhaustiveSearch == EXH_AUTO) {
+		using u64 = uint64_t;
+		u64 y_range = (m_yMax / 16 + 1) - (m_yMin / 16);
+		u64 blocks = (u64)(m_geomX2 - m_geomX) * y_range * (u64)(m_geomY2 - m_geomY);
+#ifndef NDEBUG
+		std::cout << "Heuristic parameters:"
+			<< " preferRangeQueries()=" << m_db->preferRangeQueries()
+			<< " y_range=" << y_range << " blocks=" << blocks << std::endl;
+#endif
+		if (m_db->preferRangeQueries())
+			m_exhaustiveSearch = EXH_NEVER;
+		else if (blocks < 200000)
+			m_exhaustiveSearch = EXH_FULL;
+		else if (y_range < 600)
+			m_exhaustiveSearch = EXH_Y;
+		else
+			m_exhaustiveSearch = EXH_NEVER;
+	} else if (m_exhaustiveSearch == EXH_FULL || m_exhaustiveSearch == EXH_Y) {
+		if (m_db->preferRangeQueries()) {
+			std::cerr << "Note: The current database backend supports efficient "
+				"range queries, forcing exhaustive search should always result "
+				" in worse performance." << std::endl;
+		}
+	}
+	if (m_exhaustiveSearch == EXH_Y)
+		m_exhaustiveSearch = EXH_NEVER; // (TODO remove when implemented)
+	assert(m_exhaustiveSearch != EXH_AUTO);
 }
 
 void TileGenerator::closeDatabase()
@@ -340,37 +378,40 @@ void TileGenerator::closeDatabase()
 void TileGenerator::loadBlocks()
 {
 	const int16_t yMax = m_yMax / 16 + 1;
-	std::vector<BlockPos> vec = m_db->getBlockPos(
-		BlockPos(m_geomX, m_yMin / 16, m_geomY),
-		BlockPos(m_geomX2, yMax, m_geomY2)
-	);
 
-	for (auto pos : vec) {
-		assert(pos.x >= m_geomX && pos.x < m_geomX2);
-		assert(pos.y >= m_yMin / 16 && pos.y < yMax);
-		assert(pos.z >= m_geomY && pos.z < m_geomY2);
+	if (m_exhaustiveSearch == EXH_NEVER || m_exhaustiveSearch == EXH_Y) {
+		std::vector<BlockPos> vec = m_db->getBlockPos(
+			BlockPos(m_geomX, m_yMin / 16, m_geomY),
+			BlockPos(m_geomX2, yMax, m_geomY2)
+		);
 
-		// Adjust minimum and maximum positions to the nearest block
-		if (pos.x < m_xMin)
-			m_xMin = pos.x;
-		if (pos.x > m_xMax)
-			m_xMax = pos.x;
+		for (auto pos : vec) {
+			assert(pos.x >= m_geomX && pos.x < m_geomX2);
+			assert(pos.y >= m_yMin / 16 && pos.y < yMax);
+			assert(pos.z >= m_geomY && pos.z < m_geomY2);
 
-		if (pos.z < m_zMin)
-			m_zMin = pos.z;
-		if (pos.z > m_zMax)
-			m_zMax = pos.z;
+			// Adjust minimum and maximum positions to the nearest block
+			if (pos.x < m_xMin)
+				m_xMin = pos.x;
+			if (pos.x > m_xMax)
+				m_xMax = pos.x;
 
-		m_positions[pos.z].emplace(pos.x);
-	}
+			if (pos.z < m_zMin)
+				m_zMin = pos.z;
+			if (pos.z > m_zMax)
+				m_zMax = pos.z;
+
+			m_positions[pos.z].emplace(pos.x);
+		}
 
 #ifndef NDEBUG
-	int count = 0;
-	for (const auto &it : m_positions)
-		count += it.second.size();
-	std::cout << "Loaded " << count
-		<< " positions (across Z: " << m_positions.size() << ") for rendering" << std::endl;
+		int count = 0;
+		for (const auto &it : m_positions)
+			count += it.second.size();
+		std::cout << "Loaded " << count
+			<< " positions (across Z: " << m_positions.size() << ") for rendering" << std::endl;
 #endif
+	}
 }
 
 void TileGenerator::createImage()
@@ -422,44 +463,76 @@ void TileGenerator::renderMap()
 	BlockDecoder blk;
 	const int16_t yMax = m_yMax / 16 + 1;
 
-	for (auto it = m_positions.rbegin(); it != m_positions.rend(); ++it) {
-		int16_t zPos = it->first;
-		for (auto it2 = it->second.rbegin(); it2 != it->second.rend(); ++it2) {
-			int16_t xPos = *it2;
-
-			m_readPixels.reset();
-			m_readInfo.reset();
-			for (int i = 0; i < 16; i++) {
-				for (int j = 0; j < 16; j++) {
-					m_color[i][j] = m_bgColor; // This will be drawn by renderMapBlockBottom() for y-rows with only 'air', 'ignore' or unknown nodes if --drawalpha is used
-					m_color[i][j].a = 0; // ..but set alpha to 0 to tell renderMapBlock() not to use this color to mix a shade
-					m_thickness[i][j] = 0;
-				}
+	auto renderSingle = [&] (int16_t xPos, int16_t zPos, BlockList &blockStack) {
+		m_readPixels.reset();
+		m_readInfo.reset();
+		for (int i = 0; i < 16; i++) {
+			for (int j = 0; j < 16; j++) {
+				m_color[i][j] = m_bgColor; // This will be drawn by renderMapBlockBottom() for y-rows with only 'air', 'ignore' or unknown nodes if --drawalpha is used
+				m_color[i][j].a = 0; // ..but set alpha to 0 to tell renderMapBlock() not to use this color to mix a shade
+				m_thickness[i][j] = 0;
 			}
-
-			BlockList blockStack;
-			m_db->getBlocksOnXZ(blockStack, xPos, zPos, m_yMin / 16, yMax);
-			blockStack.sort();
-			for (const auto &it : blockStack) {
-				const BlockPos pos = it.first;
-				assert(pos.x == xPos && pos.z == zPos);
-				assert(pos.y >= m_yMin / 16 && pos.y < yMax);
-
-				blk.reset();
-				blk.decode(it.second);
-				if (blk.isEmpty())
-					continue;
-				renderMapBlock(blk, pos);
-
-				// Exit out if all pixels for this MapBlock are covered
-				if (m_readPixels.full())
-					break;
-			}
-			if (!m_readPixels.full())
-				renderMapBlockBottom(blockStack.begin()->first);
 		}
+
+		for (const auto &it : blockStack) {
+			const BlockPos pos = it.first;
+			assert(pos.x == xPos && pos.z == zPos);
+			assert(pos.y >= m_yMin / 16 && pos.y < yMax);
+
+			blk.reset();
+			blk.decode(it.second);
+			if (blk.isEmpty())
+				continue;
+			renderMapBlock(blk, pos);
+
+			// Exit out if all pixels for this MapBlock are covered
+			if (m_readPixels.full())
+				break;
+		}
+		if (!m_readPixels.full())
+			renderMapBlockBottom(blockStack.begin()->first);
+	};
+	auto postRenderRow = [&] (int16_t zPos) {
 		if (m_shading)
 			renderShading(zPos);
+	};
+
+	if (m_exhaustiveSearch == EXH_NEVER) {
+		for (auto it = m_positions.rbegin(); it != m_positions.rend(); ++it) {
+			int16_t zPos = it->first;
+			for (auto it2 = it->second.rbegin(); it2 != it->second.rend(); ++it2) {
+				int16_t xPos = *it2;
+
+				BlockList blockStack;
+				m_db->getBlocksOnXZ(blockStack, xPos, zPos, m_yMin / 16, yMax);
+				blockStack.sort();
+
+				renderSingle(xPos, zPos, blockStack);
+			}
+			postRenderRow(zPos);
+		}
+	} else if (m_exhaustiveSearch == EXH_FULL) {
+#ifndef NDEBUG
+		std::cerr << "Exhaustively searching "
+			<< (m_geomX2 - m_geomX) << "x" << (yMax - (m_yMin / 16)) << "x"
+			<< (m_geomY2 - m_geomY) << " blocks" << std::endl;
+#endif
+		std::vector<BlockPos> positions;
+		positions.reserve(yMax - (m_yMin / 16));
+		for (int16_t zPos = m_geomY2 - 1; zPos >= m_geomY; zPos--) {
+			for (int16_t xPos = m_geomX2 - 1; xPos >= m_geomX; xPos--) {
+				positions.clear();
+				for (int16_t yPos = m_yMin / 16; yPos < yMax; yPos++)
+					positions.emplace_back(xPos, yPos, zPos);
+
+				BlockList blockStack;
+				m_db->getBlocksByPos(blockStack, positions);
+				blockStack.sort();
+
+				renderSingle(xPos, zPos, blockStack);
+			}
+			postRenderRow(zPos);
+		}
 	}
 }
 

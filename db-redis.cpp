@@ -82,7 +82,7 @@ std::vector<BlockPos> DBRedis::getBlockPos(BlockPos min, BlockPos max)
 }
 
 
-std::string DBRedis::replyTypeStr(int type) {
+const char *DBRedis::replyTypeStr(int type) {
 	switch(type) {
 		case REDIS_REPLY_STATUS:
 			return "REDIS_REPLY_STATUS";
@@ -121,7 +121,8 @@ void DBRedis::loadPosCache()
 }
 
 
-void DBRedis::HMGET(const std::vector<BlockPos> &positions, std::vector<ustring> *result)
+void DBRedis::HMGET(const std::vector<BlockPos> &positions,
+	std::function<void(std::size_t, ustring)> result)
 {
 	const char *argv[DB_REDIS_HMGET_NUMFIELDS + 2];
 	argv[0] = "HMGET";
@@ -146,27 +147,21 @@ void DBRedis::HMGET(const std::vector<BlockPos> &positions, std::vector<ustring>
 
 		if(!reply)
 			throw std::runtime_error("Redis command HMGET failed");
-		if (reply->type != REDIS_REPLY_ARRAY) {
-			freeReplyObject(reply);
-			REPLY_TYPE_ERR(reply, "HKEYS subreply");
-		}
+		if (reply->type != REDIS_REPLY_ARRAY)
+			REPLY_TYPE_ERR(reply, "HMGET reply");
 		if (reply->elements != batch_size) {
 			freeReplyObject(reply);
 			throw std::runtime_error("HMGET wrong number of elements");
 		}
-		for (std::size_t i = 0; i < batch_size; ++i) {
+		for (std::size_t i = 0; i < reply->elements; ++i) {
 			redisReply *subreply = reply->element[i];
-			if(!subreply)
-				throw std::runtime_error("Redis command HMGET failed");
-			if (subreply->type != REDIS_REPLY_STRING) {
-				freeReplyObject(reply);
-				REPLY_TYPE_ERR(reply, "HKEYS subreply");
-			}
-			if (subreply->len == 0) {
-				freeReplyObject(reply);
+			if (subreply->type == REDIS_REPLY_NIL)
+				continue;
+			else if (subreply->type != REDIS_REPLY_STRING)
+				REPLY_TYPE_ERR(subreply, "HMGET subreply");
+			if (subreply->len == 0)
 				throw std::runtime_error("HMGET empty string");
-			}
-			result->emplace_back((const unsigned char *) subreply->str, subreply->len);
+			result(i, ustring((const unsigned char *) subreply->str, subreply->len));
 		}
 		freeReplyObject(reply);
 		remaining -= batch_size;
@@ -187,10 +182,15 @@ void DBRedis::getBlocksOnXZ(BlockList &blocks, int16_t x, int16_t z,
 			positions.emplace_back(x, pos2.second, z);
 	}
 
-	std::vector<ustring> db_blocks;
-	HMGET(positions, &db_blocks);
+	getBlocksByPos(blocks, positions);
+}
 
-	auto block = db_blocks.cbegin();
-	for (auto pos = positions.cbegin(); pos != positions.cend(); ++pos, ++block)
-		blocks.emplace_back(*pos, *block);
+
+void DBRedis::getBlocksByPos(BlockList &blocks,
+			const std::vector<BlockPos> &positions)
+{
+	auto result = [&] (std::size_t i, ustring data) {
+		blocks.emplace_back(positions[i], std::move(data));
+	};
+	HMGET(positions, result);
 }

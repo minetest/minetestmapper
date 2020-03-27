@@ -52,11 +52,21 @@ public:
 	 * so that min.x <= x < max.x, ...
 	 */
 	virtual std::vector<BlockPos> getBlockPos(BlockPos min, BlockPos max) = 0;
-	/* Return all blocks in column given by x and z
-	 * and inside the given Y range (min_y <= y < max_y)
+	/* Read all blocks in column given by x and z
+	 * and inside the given Y range (min_y <= y < max_y) into list
 	 */
 	virtual void getBlocksOnXZ(BlockList &blocks, int16_t x, int16_t z,
 			int16_t min_y, int16_t max_y) = 0;
+	/* Read blocks at given positions into list
+	 */
+	virtual void getBlocksByPos(BlockList &blocks,
+			const std::vector<BlockPos> &positions) = 0;
+	/* Can this database efficiently do range queries?
+	 * (for large data sets, more efficient that brute force)
+	 */
+	virtual bool preferRangeQueries() const = 0;
+
+
 	virtual ~DB() {}
 };
 

@@ -106,3 +106,7 @@ colors:
 
 scales:
     Draw scales on specified image edges (letters *t b l r* meaning top, bottom, left and right), e.g. ``--scales tbr``
+
+exhaustive:
+    Select if database should be traversed exhaustively or using range queries, available: *never*, *y*, *full*, *auto*
+    Defaults to *auto*. You shouldn't need to change this, but doing so can improve rendering times on large maps.

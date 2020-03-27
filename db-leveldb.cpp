@@ -96,3 +96,19 @@ void DBLevelDB::getBlocksOnXZ(BlockList &blocks, int16_t x, int16_t z,
 		}
 	}
 }
+
+void DBLevelDB::getBlocksByPos(BlockList &blocks,
+			const std::vector<BlockPos> &positions)
+{
+	std::string datastr;
+	leveldb::Status status;
+
+	for (auto pos : positions) {
+		status = db->Get(leveldb::ReadOptions(), i64tos(encodeBlockPos(pos)), &datastr);
+		if (status.ok()) {
+			blocks.emplace_back(
+				pos, ustring((unsigned char *) datastr.data(), datastr.size())
+			);
+		}
+	}
+}

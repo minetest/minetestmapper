@@ -70,11 +70,11 @@ Don't draw nodes above this y value, e.g. "--max-y 75"
 
 .TP
 .BR \-\-backend " " \fIbackend\fR
-Use specific map backend; supported: *sqlite3*, *leveldb*, *redis*, *postgresql*, e.g. "--backend leveldb"
+Use specific map backend; supported: \fIsqlite3\fP, \fIleveldb\fP, \fIredis\fP, \fIpostgresql\fP, e.g. "--backend leveldb"
 
 .TP
 .BR \-\-geometry " " \fIgeometry\fR
-Limit area to specific geometry (*x:y+w+h* where x and y specify the lower left corner), e.g. "--geometry -800:-800+1600+1600"
+Limit area to specific geometry (\fIx:y+w+h\fP where x and y specify the lower left corner), e.g. "--geometry -800:-800+1600+1600"
 
 .TP
 .BR \-\-extent " " \fIextent\fR
@@ -90,7 +90,13 @@ Forcefully set path to colors.txt file (it's autodetected otherwise), e.g. "--co
 
 .TP
 .BR \-\-scales " " \fIedges\fR
-Draw scales on specified image edges (letters *t b l r* meaning top, bottom, left and right), e.g. "--scales tbr"
+Draw scales on specified image edges (letters \fIt b l r\fP meaning top, bottom, left and right), e.g. "--scales tbr"
+
+.TP
+.BR \-\-exhaustive " \fImode\fR
+Select if database should be traversed exhaustively or using range queries, available: \fInever\fP, \fIy\fP, \fIfull\fP, \fIauto\fP
+
+Defaults to \fIauto\fP. You shouldn't need to change this, but doing so can improve rendering times on large maps.
 
 .SH MORE INFORMATION
 Website: https://github.com/minetest/minetestmapper

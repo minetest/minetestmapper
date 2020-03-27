@@ -12,7 +12,11 @@ public:
 	std::vector<BlockPos> getBlockPos(BlockPos min, BlockPos max) override;
 	void getBlocksOnXZ(BlockList &blocks, int16_t x, int16_t z,
 			int16_t min_y, int16_t max_y) override;
+	void getBlocksByPos(BlockList &blocks,
+			const std::vector<BlockPos> &positions) override;
 	~DBLevelDB() override;
+
+	bool preferRangeQueries() const override { return false; }
 
 private:
 	using pos2d = std::pair<int16_t, int16_t>;

@@ -23,6 +23,13 @@ enum {
 	SCALE_RIGHT = (1 << 3),
 };
 
+enum {
+	EXH_NEVER, // Always use range queries
+	EXH_Y,     // Exhaustively search Y space, range queries for X/Z (future TODO)
+	EXH_FULL,  // Exhaustively search entire requested geometry
+	EXH_AUTO,  // Automatically pick one of the previous modes
+};
+
 struct ColorEntry {
 	ColorEntry(): r(0), g(0), b(0), a(0), t(0) {};
 	ColorEntry(uint8_t r, uint8_t g, uint8_t b, uint8_t a, uint8_t t): r(r), g(g), b(b), a(a), t(t) {};
@@ -75,6 +82,7 @@ public:
 	void setGeometry(int x, int y, int w, int h);
 	void setMinY(int y);
 	void setMaxY(int y);
+	void setExhaustiveSearch(int mode);
 	void parseColorsFile(const std::string &fileName);
 	void setBackend(std::string backend);
 	void generate(const std::string &input, const std::string &output);
@@ -135,6 +143,7 @@ private:
 	/* */
 	int m_mapWidth;
 	int m_mapHeight;
+	int m_exhaustiveSearch;
 	std::map<int16_t, std::set<int16_t>> m_positions; /* indexed by Z, contains X coords */
 	ColorMap m_colorMap;
 	BitmapThing m_readPixels;

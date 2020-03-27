@@ -33,6 +33,7 @@ static void usage()
 			"  --zoom <zoomlevel>\n"
 			"  --colors <colors.txt>\n"
 			"  --scales [t][b][l][r]\n"
+			"  --exhaustive never|y|full|auto\n"
 			"Color format: '#000000'\n";
 	std::cout << usage_text;
 }
@@ -90,6 +91,7 @@ int main(int argc, char *argv[])
 		{"colors", required_argument, 0, 'C'},
 		{"scales", required_argument, 0, 'f'},
 		{"noemptyimage", no_argument, 0, 'n'},
+		{"exhaustive", required_argument, 0, 'j'},
 		{0, 0, 0, 0}
 	};
 
@@ -200,6 +202,19 @@ int main(int argc, char *argv[])
 				break;
 			case 'n':
 				generator.setDontWriteEmpty(true);
+				break;
+			case 'j': {
+					int mode;
+					if (!strcmp(optarg, "never"))
+						mode = EXH_NEVER;
+					else if (!strcmp(optarg, "y"))
+						mode = EXH_Y;
+					else if (!strcmp(optarg, "full"))
+						mode = EXH_FULL;
+					else
+						mode = EXH_AUTO;
+					generator.setExhaustiveSearch(mode);
+				}
 				break;
 			default:
 				exit(1);

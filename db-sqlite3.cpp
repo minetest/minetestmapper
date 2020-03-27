@@ -26,6 +26,10 @@ DBSQLite3::DBSQLite3(const std::string &mapdir)
 		-1, &stmt_get_blocks_z, NULL))
 
 	SQLOK(prepare_v2(db,
+			"SELECT data FROM blocks WHERE pos = ?",
+		-1, &stmt_get_block_exact, NULL))
+
+	SQLOK(prepare_v2(db,
 			"SELECT pos FROM blocks",
 		-1, &stmt_get_block_pos, NULL))
 
@@ -40,6 +44,7 @@ DBSQLite3::~DBSQLite3()
 	sqlite3_finalize(stmt_get_blocks_z);
 	sqlite3_finalize(stmt_get_block_pos);
 	sqlite3_finalize(stmt_get_block_pos_z);
+	sqlite3_finalize(stmt_get_block_exact);
 
 	if (sqlite3_close(db) != SQLITE_OK) {
 		std::cerr << "Error closing SQLite database." << std::endl;
@@ -159,5 +164,33 @@ void DBSQLite3::getBlocksOnXZ(BlockList &blocks, int16_t x, int16_t z,
 			it = blocks.erase(it);
 		else
 			it++;
+	}
+}
+
+
+void DBSQLite3::getBlocksByPos(BlockList &blocks,
+			const std::vector<BlockPos> &positions)
+{
+	int result;
+
+	for (auto pos : positions) {
+		int64_t dbPos = encodeBlockPos(pos);
+		SQLOK(bind_int64(stmt_get_block_exact, 1, dbPos));
+
+		while ((result = sqlite3_step(stmt_get_block_exact)) == SQLITE_BUSY) {
+			usleep(10000); // Wait some time and try again
+		}
+		if (result == SQLITE_DONE) {
+			// no data
+		} else if (result != SQLITE_ROW) {
+			throw std::runtime_error(sqlite3_errmsg(db));
+		} else {
+			const unsigned char *data = reinterpret_cast<const unsigned char *>(
+					sqlite3_column_blob(stmt_get_block_exact, 0));
+			size_t size = sqlite3_column_bytes(stmt_get_block_exact, 0);
+			blocks.emplace_back(pos, ustring(data, size));
+		}
+
+		SQLOK(reset(stmt_get_block_exact))
 	}
 }
