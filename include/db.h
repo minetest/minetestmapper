@@ -5,7 +5,6 @@
 #include <map>
 #include <list>
 #include <vector>
-#include <string>
 #include <utility>
 #include "types.h"
 
@@ -17,6 +16,8 @@ struct BlockPos {
 
 	BlockPos() : x(0), y(0), z(0) {}
 	BlockPos(int16_t x, int16_t y, int16_t z) : x(x), y(y), z(z) {}
+
+	// Implements the inverse ordering so that (2,2,2) < (1,1,1)
 	bool operator < (const BlockPos &p) const
 	{
 		if (z > p.z)
@@ -42,13 +43,21 @@ typedef std::list<Block> BlockList;
 
 class DB {
 protected:
+	// Helpers that implement the hashed positions used by most backends
 	inline int64_t  encodeBlockPos(const BlockPos pos) const;
 	inline BlockPos decodeBlockPos(int64_t hash) const;
 
 public:
-	virtual std::vector<BlockPos> getBlockPos() = 0;
-	virtual void getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zPos) = 0;
-	virtual ~DB() {};
+	/* Return all block positions inside the range given by min and max,
+	 * so that min.x <= x < max.x, ...
+	 */
+	virtual std::vector<BlockPos> getBlockPos(BlockPos min, BlockPos max) = 0;
+	/* Return all blocks in column given by x and z
+	 * and inside the given Y range (min_y <= y < max_y)
+	 */
+	virtual void getBlocksOnXZ(BlockList &blocks, int16_t x, int16_t z,
+			int16_t min_y, int16_t max_y) = 0;
+	virtual ~DB() {}
 };
 
 

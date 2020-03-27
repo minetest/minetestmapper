@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <climits>
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -89,8 +90,8 @@ TileGenerator::TileGenerator():
 	m_xMax(INT_MIN),
 	m_zMin(INT_MAX),
 	m_zMax(INT_MIN),
-	m_yMin(-30000),
-	m_yMax(30000),
+	m_yMin(INT16_MIN),
+	m_yMax(INT16_MAX),
 	m_geomX(-2048),
 	m_geomY(-2048),
 	m_geomX2(2048),
@@ -184,6 +185,7 @@ void TileGenerator::setBackend(std::string backend)
 
 void TileGenerator::setGeometry(int x, int y, int w, int h)
 {
+	assert(w > 0 && h > 0);
 	m_geomX  = round_multiple_nosign(x, 16) / 16;
 	m_geomY  = round_multiple_nosign(y, 16) / 16;
 	m_geomX2 = round_multiple_nosign(x + w, 16) / 16;
@@ -193,11 +195,15 @@ void TileGenerator::setGeometry(int x, int y, int w, int h)
 void TileGenerator::setMinY(int y)
 {
 	m_yMin = y;
+	if (m_yMin > m_yMax)
+		std::swap(m_yMin, m_yMax);
 }
 
 void TileGenerator::setMaxY(int y)
 {
 	m_yMax = y;
+	if (m_yMin > m_yMax)
+		std::swap(m_yMin, m_yMax);
 }
 
 void TileGenerator::parseColorsFile(const std::string &fileName)
@@ -244,7 +250,7 @@ void TileGenerator::generate(const std::string &input, const std::string &output
 	openDb(input_path);
 	loadBlocks();
 
-	if (m_dontWriteEmpty  && ! m_positions.size())
+	if (m_dontWriteEmpty && m_positions.empty())
 	{
 		closeDatabase();
 		return;
@@ -268,7 +274,7 @@ void TileGenerator::generate(const std::string &input, const std::string &output
 
 void TileGenerator::parseColorsStream(std::istream &in)
 {
-	char line[128];
+	char line[512];
 	while (in.good()) {
 		in.getline(line, sizeof(line));
 
@@ -281,11 +287,11 @@ void TileGenerator::parseColorsStream(std::istream &in)
 		if(strlen(line) == 0)
 			continue;
 
-		char name[64 + 1] = {0};
+		char name[128 + 1] = {0};
 		unsigned int r, g, b, a, t;
 		a = 255;
 		t = 0;
-		int items = sscanf(line, "%64s %u %u %u %u %u", name, &r, &g, &b, &a, &t);
+		int items = sscanf(line, "%128s %u %u %u %u %u", name, &r, &g, &b, &a, &t);
 		if(items < 4) {
 			std::cerr << "Failed to parse color entry '" << line << "'" << std::endl;
 			continue;
@@ -333,15 +339,17 @@ void TileGenerator::closeDatabase()
 
 void TileGenerator::loadBlocks()
 {
-	std::vector<BlockPos> vec = m_db->getBlockPos();
-	for (std::vector<BlockPos>::iterator it = vec.begin(); it != vec.end(); ++it) {
-		BlockPos pos = *it;
-		// Check that it's in geometry (from --geometry option)
-		if (pos.x < m_geomX || pos.x >= m_geomX2 || pos.z < m_geomY || pos.z >= m_geomY2)
-			continue;
-		// Check that it's between --min-y and --max-y
-		if (pos.y * 16 < m_yMin || pos.y * 16 > m_yMax)
-			continue;
+	const int16_t yMax = m_yMax / 16 + 1;
+	std::vector<BlockPos> vec = m_db->getBlockPos(
+		BlockPos(m_geomX, m_yMin / 16, m_geomY),
+		BlockPos(m_geomX2, yMax, m_geomY2)
+	);
+
+	for (auto pos : vec) {
+		assert(pos.x >= m_geomX && pos.x < m_geomX2);
+		assert(pos.y >= m_yMin / 16 && pos.y < yMax);
+		assert(pos.z >= m_geomY && pos.z < m_geomY2);
+
 		// Adjust minimum and maximum positions to the nearest block
 		if (pos.x < m_xMin)
 			m_xMin = pos.x;
@@ -352,10 +360,17 @@ void TileGenerator::loadBlocks()
 			m_zMin = pos.z;
 		if (pos.z > m_zMax)
 			m_zMax = pos.z;
-		m_positions.push_back(std::make_pair(pos.x, pos.z));
+
+		m_positions[pos.z].emplace(pos.x);
 	}
-	m_positions.sort();
-	m_positions.unique();
+
+#ifndef NDEBUG
+	int count = 0;
+	for (const auto &it : m_positions)
+		count += it.second.size();
+	std::cout << "Loaded " << count
+		<< " positions (across Z: " << m_positions.size() << ") for rendering" << std::endl;
+#endif
 }
 
 void TileGenerator::createImage()
@@ -405,13 +420,12 @@ void TileGenerator::createImage()
 void TileGenerator::renderMap()
 {
 	BlockDecoder blk;
-	std::list<int16_t> zlist = getZValueList();
-	for (int16_t zPos : zlist) {
-		std::map<int16_t, BlockList> blocks;
-		m_db->getBlocksOnZ(blocks, zPos);
-		for (const auto position : m_positions) {
-			if (position.second != zPos)
-				continue;
+	const int16_t yMax = m_yMax / 16 + 1;
+
+	for (auto it = m_positions.rbegin(); it != m_positions.rend(); ++it) {
+		int16_t zPos = it->first;
+		for (auto it2 = it->second.rbegin(); it2 != it->second.rend(); ++it2) {
+			int16_t xPos = *it2;
 
 			m_readPixels.reset();
 			m_readInfo.reset();
@@ -423,11 +437,13 @@ void TileGenerator::renderMap()
 				}
 			}
 
-			int16_t xPos = position.first;
-			blocks[xPos].sort();
-			const BlockList &blockStack = blocks[xPos];
+			BlockList blockStack;
+			m_db->getBlocksOnXZ(blockStack, xPos, zPos, m_yMin / 16, yMax);
+			blockStack.sort();
 			for (const auto &it : blockStack) {
-				const BlockPos &pos = it.first;
+				const BlockPos pos = it.first;
+				assert(pos.x == xPos && pos.z == zPos);
+				assert(pos.y >= m_yMin / 16 && pos.y < yMax);
 
 				blk.reset();
 				blk.decode(it.second);
@@ -649,17 +665,6 @@ void TileGenerator::renderPlayers(const std::string &inputPath)
 		m_image->drawFilledRect(imageX, imageY - 1, 1, 3, m_playerColor);
 		m_image->drawText(imageX + 2, imageY, player.name, m_playerColor);
 	}
-}
-
-inline std::list<int16_t> TileGenerator::getZValueList() const
-{
-	std::list<int16_t> zlist;
-	for (const auto position : m_positions)
-		zlist.push_back(position.second);
-	zlist.sort();
-	zlist.unique();
-	zlist.reverse();
-	return zlist;
 }
 
 void TileGenerator::writeImage(const std::string &output)

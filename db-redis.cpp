@@ -51,6 +51,9 @@ DBRedis::DBRedis(const std::string &mapdir)
 		throw std::runtime_error(err);
 	}
 
+	/* Redis is just a key-value store, so the only optimization we can do
+	 * is to cache the block positions that exist in the db.
+	 */
 	loadPosCache();
 }
 
@@ -61,9 +64,21 @@ DBRedis::~DBRedis()
 }
 
 
-std::vector<BlockPos> DBRedis::getBlockPos()
+std::vector<BlockPos> DBRedis::getBlockPos(BlockPos min, BlockPos max)
 {
-	return posCache;
+	std::vector<BlockPos> res;
+	for (const auto &it : posCache) {
+		if (it.first < min.z || it.first >= max.z)
+			continue;
+		for (auto pos2 : it.second) {
+			if (pos2.first < min.x || pos2.first >= max.x)
+				continue;
+			if (pos2.second < min.y || pos2.second >= max.y)
+				continue;
+			res.emplace_back(pos2.first, pos2.second, it.first);
+		}
+	}
+	return res;
 }
 
 
@@ -98,7 +113,8 @@ void DBRedis::loadPosCache()
 	for(size_t i = 0; i < reply->elements; i++) {
 		if(reply->element[i]->type != REDIS_REPLY_STRING)
 			REPLY_TYPE_ERR(reply->element[i], "HKEYS subreply");
-		posCache.push_back(decodeBlockPos(stoi64(reply->element[i]->str)));
+		BlockPos pos = decodeBlockPos(stoi64(reply->element[i]->str));
+		posCache[pos.z].emplace_back(pos.x, pos.y);
 	}
 
 	freeReplyObject(reply);
@@ -150,7 +166,7 @@ void DBRedis::HMGET(const std::vector<BlockPos> &positions, std::vector<ustring>
 				freeReplyObject(reply);
 				throw std::runtime_error("HMGET empty string");
 			}
-			result->push_back(ustring((const unsigned char *) subreply->str, subreply->len));
+			result->emplace_back((const unsigned char *) subreply->str, subreply->len);
 		}
 		freeReplyObject(reply);
 		remaining -= batch_size;
@@ -158,22 +174,23 @@ void DBRedis::HMGET(const std::vector<BlockPos> &positions, std::vector<ustring>
 }
 
 
-void DBRedis::getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zPos)
+void DBRedis::getBlocksOnXZ(BlockList &blocks, int16_t x, int16_t z,
+		int16_t min_y, int16_t max_y)
 {
-	std::vector<BlockPos> z_positions;
-	for (std::vector<BlockPos>::const_iterator it = posCache.begin(); it != posCache.end(); ++it) {
-		if (it->z != zPos) {
-			continue;
-		}
-		z_positions.push_back(*it);
-	}
-	std::vector<ustring> z_blocks;
-	HMGET(z_positions, &z_blocks);
+	auto it = posCache.find(z);
+	if (it == posCache.cend())
+		return;
 
-	std::vector<ustring>::const_iterator z_block = z_blocks.begin();
-	for (std::vector<BlockPos>::const_iterator pos = z_positions.begin();
-			pos != z_positions.end();
-			++pos, ++z_block) {
-		blocks[pos->x].push_back(Block(*pos, *z_block));
+	std::vector<BlockPos> positions;
+	for (auto pos2 : it->second) {
+		if (pos2.first == x && pos2.second >= min_y && pos2.second < max_y)
+			positions.emplace_back(x, pos2.second, z);
 	}
+
+	std::vector<ustring> db_blocks;
+	HMGET(positions, &db_blocks);
+
+	auto block = db_blocks.cbegin();
+	for (auto pos = positions.cbegin(); pos != positions.cend(); ++pos, ++block)
+		blocks.emplace_back(*pos, *block);
 }

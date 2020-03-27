@@ -2,7 +2,8 @@
 #define TILEGENERATOR_HEADER
 
 #include <iosfwd>
-#include <list>
+#include <map>
+#include <set>
 #include <config.h>
 #include <unordered_map>
 #include <unordered_set>
@@ -64,7 +65,8 @@ public:
 	void setBgColor(const std::string &bgColor);
 	void setScaleColor(const std::string &scaleColor);
 	void setOriginColor(const std::string &originColor);
-	void setPlayerColor(const std::string &playerColor); Color parseColor(const std::string &color);
+	void setPlayerColor(const std::string &playerColor);
+	Color parseColor(const std::string &color);
 	void setDrawOrigin(bool drawOrigin);
 	void setDrawPlayers(bool drawPlayers);
 	void setDrawScale(bool drawScale);
@@ -88,7 +90,6 @@ private:
 	void loadBlocks();
 	void createImage();
 	void renderMap();
-	std::list<int16_t> getZValueList() const;
 	void renderMapBlock(const BlockDecoder &blk, const BlockPos &pos);
 	void renderMapBlockBottom(const BlockPos &pos);
 	void renderShading(int zPos);
@@ -118,19 +119,23 @@ private:
 	DB *m_db;
 	Image *m_image;
 	PixelAttributes m_blockPixelAttributes;
+	/* smallest/largest seen X or Z block coordinate */
 	int m_xMin;
 	int m_xMax;
 	int m_zMin;
 	int m_zMax;
+	/* Y limits for rendered area (node units) */
 	int m_yMin;
 	int m_yMax;
-	int m_geomX;
-	int m_geomY;
-	int m_geomX2;
-	int m_geomY2;
+	/* limits for rendered area (block units) */
+	int16_t m_geomX;
+	int16_t m_geomY; /* Y in terms of rendered image, Z in the world */
+	int16_t m_geomX2;
+	int16_t m_geomY2;
+	/* */
 	int m_mapWidth;
 	int m_mapHeight;
-	std::list<std::pair<int16_t, int16_t>> m_positions;
+	std::map<int16_t, std::set<int16_t>> m_positions; /* indexed by Z, contains X coords */
 	ColorMap m_colorMap;
 	BitmapThing m_readPixels;
 	BitmapThing m_readInfo;

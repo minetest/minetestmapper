@@ -27,11 +27,16 @@ DBPostgreSQL::DBPostgreSQL(const std::string &mapdir)
 
 	prepareStatement(
 		"get_block_pos",
-		"SELECT posX, posY, posZ FROM blocks"
+		"SELECT posX::int4, posY::int4, posZ::int4 FROM blocks WHERE"
+		" (posX BETWEEN $1::int4 AND $2::int4) AND"
+		" (posY BETWEEN $3::int4 AND $4::int4) AND"
+		" (posZ BETWEEN $5::int4 AND $6::int4)"
 	);
 	prepareStatement(
-		"get_blocks_z",
-		"SELECT posX, posY, data FROM blocks WHERE posZ = $1::int4"
+		"get_blocks",
+		"SELECT posY::int4, data FROM blocks WHERE"
+		" posX = $1::int4 AND posZ = $2::int4"
+		" AND (posY BETWEEN $3::int4 AND $4::int4)"
 	);
 
 	checkResults(PQexec(db, "START TRANSACTION;"));
@@ -49,19 +54,31 @@ DBPostgreSQL::~DBPostgreSQL()
 	PQfinish(db);
 }
 
-std::vector<BlockPos> DBPostgreSQL::getBlockPos()
+std::vector<BlockPos> DBPostgreSQL::getBlockPos(BlockPos min, BlockPos max)
 {
-	std::vector<BlockPos> positions;
+	int32_t const x1 = htonl(min.x);
+	int32_t const x2 = htonl(max.x - 1);
+	int32_t const y1 = htonl(min.y);
+	int32_t const y2 = htonl(max.y - 1);
+	int32_t const z1 = htonl(min.z);
+	int32_t const z2 = htonl(max.z - 1);
+
+	const void *args[] = { &x1, &x2, &y1, &y2, &z1, &z2 };
+	const int argLen[] = { 4, 4, 4, 4, 4, 4 };
+	const int argFmt[] = { 1, 1, 1, 1, 1, 1 };
 
 	PGresult *results = execPrepared(
-		"get_block_pos", 0,
-		NULL, NULL, NULL, false, false
+		"get_block_pos", ARRLEN(args), args,
+		argLen, argFmt, false
 	);
 
 	int numrows = PQntuples(results);
 
+	std::vector<BlockPos> positions;
+	positions.reserve(numrows);
+
 	for (int row = 0; row < numrows; ++row)
-		positions.push_back(pg_to_blockpos(results, row, 0));
+		positions.emplace_back(pg_to_blockpos(results, row, 0));
 
 	PQclear(results);
 
@@ -69,16 +86,20 @@ std::vector<BlockPos> DBPostgreSQL::getBlockPos()
 }
 
 
-void DBPostgreSQL::getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zPos)
+void DBPostgreSQL::getBlocksOnXZ(BlockList &blocks, int16_t xPos, int16_t zPos,
+		int16_t min_y, int16_t max_y)
 {
+	int32_t const x = htonl(xPos);
 	int32_t const z = htonl(zPos);
+	int32_t const y1 = htonl(min_y);
+	int32_t const y2 = htonl(max_y - 1);
 
-	const void *args[] = { &z };
-	const int argLen[] = { sizeof(z) };
-	const int argFmt[] = { 1 };
+	const void *args[] = { &x, &z, &y1, &y2 };
+	const int argLen[] = { 4, 4, 4, 4 };
+	const int argFmt[] = { 1, 1, 1, 1 };
 
 	PGresult *results = execPrepared(
-		"get_blocks_z", ARRLEN(args), args,
+		"get_blocks", ARRLEN(args), args,
 		argLen, argFmt, false
 	);
 
@@ -86,19 +107,18 @@ void DBPostgreSQL::getBlocksOnZ(std::map<int16_t, BlockList> &blocks, int16_t zP
 
 	for (int row = 0; row < numrows; ++row) {
 		BlockPos position;
-		position.x = pg_binary_to_int(results, row, 0);
-		position.y = pg_binary_to_int(results, row, 1);
+		position.x = xPos;
+		position.y = pg_binary_to_int(results, row, 0);
 		position.z = zPos;
-		Block const b(
+		blocks.emplace_back(
 			position,
 			ustring(
 				reinterpret_cast<unsigned char*>(
-					PQgetvalue(results, row, 2)
+					PQgetvalue(results, row, 1)
 				),
-				PQgetlength(results, row, 2)
+				PQgetlength(results, row, 1)
 			)
 		);
-		blocks[position.x].push_back(b);
 	}
 
 	PQclear(results);
@@ -138,18 +158,13 @@ PGresult *DBPostgreSQL::execPrepared(
 	const char *stmtName, const int paramsNumber,
 	const void **params,
 	const int *paramsLengths, const int *paramsFormats,
-	bool clear, bool nobinary
+	bool clear
 )
 {
 	return checkResults(PQexecPrepared(db, stmtName, paramsNumber,
 		(const char* const*) params, paramsLengths, paramsFormats,
-		nobinary ? 1 : 0), clear
+		1 /* binary output */), clear
 	);
-}
-
-int DBPostgreSQL::pg_to_int(PGresult *res, int row, int col)
-{
-	return atoi(PQgetvalue(res, row, col));
 }
 
 int DBPostgreSQL::pg_binary_to_int(PGresult *res, int row, int col)
@@ -161,8 +176,8 @@ int DBPostgreSQL::pg_binary_to_int(PGresult *res, int row, int col)
 BlockPos DBPostgreSQL::pg_to_blockpos(PGresult *res, int row, int col)
 {
 	BlockPos result;
-	result.x = pg_to_int(res, row, col);
-	result.y = pg_to_int(res, row, col + 1);
-	result.z = pg_to_int(res, row, col + 2);
+	result.x = pg_binary_to_int(res, row, col);
+	result.y = pg_binary_to_int(res, row, col + 1);
+	result.z = pg_binary_to_int(res, row, col + 2);
 	return result;
 }
