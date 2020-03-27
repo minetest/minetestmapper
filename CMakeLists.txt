@@ -1,7 +1,6 @@
 project(minetestmapper CXX)
 cmake_minimum_required(VERSION 2.6)
 cmake_policy(SET CMP0003 NEW)
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set(VERSION_MAJOR 1)
 set(VERSION_MINOR 0)
@@ -46,6 +45,9 @@ if(NOT CUSTOM_DOCDIR STREQUAL "")
         message(STATUS "Using DOCDIR=${DOCDIR}")
 endif()
 
+#set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+find_package(PkgConfig)
+include(FindPackageHandleStandardArgs)
 
 # Libraries: gd
 
@@ -67,9 +69,6 @@ if(NOT ZLIB_LIBRARY OR NOT ZLIB_INCLUDE_DIR)
 	message(FATAL_ERROR "zlib not found!")
 endif(NOT ZLIB_LIBRARY OR NOT ZLIB_INCLUDE_DIR)
 
-find_package(PkgConfig)
-include(FindPackageHandleStandardArgs)
-
 # Libraries: sqlite3
 
 find_library(SQLITE3_LIBRARY sqlite3)
@@ -83,75 +82,56 @@ endif(NOT SQLITE3_LIBRARY OR NOT SQLITE3_INCLUDE_DIR)
 # Libraries: postgresql
 
 option(ENABLE_POSTGRESQL "Enable PostgreSQL backend" TRUE)
-set(USE_POSTGRESQL 0)
+set(USE_POSTGRESQL FALSE)
 
 if(ENABLE_POSTGRESQL)
-	find_program(POSTGRESQL_CONFIG_EXECUTABLE pg_config DOC "pg_config")
-	find_library(POSTGRESQL_LIBRARY pq)
-	if(POSTGRESQL_CONFIG_EXECUTABLE)
-		execute_process(COMMAND ${POSTGRESQL_CONFIG_EXECUTABLE} --includedir-server
-			OUTPUT_VARIABLE POSTGRESQL_SERVER_INCLUDE_DIRS
-			OUTPUT_STRIP_TRAILING_WHITESPACE)
-		execute_process(COMMAND ${POSTGRESQL_CONFIG_EXECUTABLE}
-			OUTPUT_VARIABLE POSTGRESQL_CLIENT_INCLUDE_DIRS
-			OUTPUT_STRIP_TRAILING_WHITESPACE)
-		# This variable is case sensitive for the cmake PostgreSQL module
-		set(PostgreSQL_ADDITIONAL_SEARCH_PATHS ${POSTGRESQL_SERVER_INCLUDE_DIRS} ${POSTGRESQL_CLIENT_INCLUDE_DIRS})
-	endif()
-
 	find_package("PostgreSQL")
 
-	if(POSTGRESQL_FOUND)
-		set(USE_POSTGRESQL 1)
+	if(PostgreSQL_FOUND)
+		set(USE_POSTGRESQL TRUE)
 		message(STATUS "PostgreSQL backend enabled")
 		# This variable is case sensitive, don't try to change it to POSTGRESQL_INCLUDE_DIR
-		message(STATUS "PostgreSQL includes: ${PostgreSQL_INCLUDE_DIR}")
-		include_directories(${PostgreSQL_INCLUDE_DIR})
-		set(POSTGRESQL_LIBRARY ${PostgreSQL_LIBRARIES})
+		message(STATUS "PostgreSQL includes: ${PostgreSQL_INCLUDE_DIRS}")
+		include_directories(${PostgreSQL_INCLUDE_DIRS})
 	else()
-		message(STATUS "PostgreSQL not found.")
-		set(POSTGRESQL_LIBRARY "")
+		message(STATUS "PostgreSQL not found!")
 	endif()
 endif(ENABLE_POSTGRESQL)
 
 # Libraries: leveldb
 
-set(USE_LEVELDB 0)
-
-OPTION(ENABLE_LEVELDB "Enable LevelDB backend")
+OPTION(ENABLE_LEVELDB "Enable LevelDB backend" TRUE)
+set(USE_LEVELDB FALSE)
 
 if(ENABLE_LEVELDB)
 	find_library(LEVELDB_LIBRARY leveldb)
-	find_path(LEVELDB_INCLUDE_DIR db.h PATH_SUFFIXES leveldb)
+	find_path(LEVELDB_INCLUDE_DIR leveldb/db.h)
 	message (STATUS "LevelDB library: ${LEVELDB_LIBRARY}")
 	message (STATUS "LevelDB headers: ${LEVELDB_INCLUDE_DIR}")
 	if(LEVELDB_LIBRARY AND LEVELDB_INCLUDE_DIR)
-		set(USE_LEVELDB 1)
+		set(USE_LEVELDB TRUE)
 		message(STATUS "LevelDB backend enabled")
 		include_directories(${LEVELDB_INCLUDE_DIR})
 	else(LEVELDB_LIBRARY AND LEVELDB_INCLUDE_DIR)
-		set(USE_LEVELDB 0)
 		message(STATUS "LevelDB not found!")
 	endif(LEVELDB_LIBRARY AND LEVELDB_INCLUDE_DIR)
 endif(ENABLE_LEVELDB)
 
 # Libraries: redis
 
-set(USE_REDIS 0)
-
-OPTION(ENABLE_REDIS "Enable redis backend")
+OPTION(ENABLE_REDIS "Enable redis backend" TRUE)
+set(USE_REDIS FALSE)
 
 if(ENABLE_REDIS)
 	find_library(REDIS_LIBRARY hiredis)
-	find_path(REDIS_INCLUDE_DIR hiredis.h PATH_SUFFIXES hiredis)
+	find_path(REDIS_INCLUDE_DIR hiredis/hiredis.h)
 	message (STATUS "redis library: ${REDIS_LIBRARY}")
 	message (STATUS "redis headers: ${REDIS_INCLUDE_DIR}")
 	if(REDIS_LIBRARY AND REDIS_INCLUDE_DIR)
-		set(USE_REDIS 1)
+		set(USE_REDIS TRUE)
 		message(STATUS "redis backend enabled")
 		include_directories(${REDIS_INCLUDE_DIR})
 	else(REDIS_LIBRARY AND REDIS_INCLUDE_DIR)
-		set(USE_REDIS 0)
 		message(STATUS "redis not found!")
 	endif(REDIS_LIBRARY AND REDIS_INCLUDE_DIR)
 endif(ENABLE_REDIS)
@@ -204,7 +184,7 @@ add_executable(minetestmapper
 target_link_libraries(
 	minetestmapper
 	${SQLITE3_LIBRARY}
-	${POSTGRESQL_LIBRARY}
+	${PostgreSQL_LIBRARIES}
 	${LEVELDB_LIBRARY}
 	${REDIS_LIBRARY}
 	${LIBGD_LIBRARY}

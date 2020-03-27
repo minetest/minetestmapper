@@ -3,9 +3,9 @@
 #ifndef CMAKE_CONFIG_H
 #define CMAKE_CONFIG_H
 
-#define USE_POSTGRESQL @USE_POSTGRESQL@
-#define USE_LEVELDB @USE_LEVELDB@
-#define USE_REDIS @USE_REDIS@
+#cmakedefine01 USE_POSTGRESQL
+#cmakedefine01 USE_LEVELDB
+#cmakedefine01 USE_REDIS
 
 #define SHAREDIR "@SHAREDIR@"
 

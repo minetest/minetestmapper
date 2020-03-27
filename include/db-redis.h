@@ -2,7 +2,7 @@
 #define DB_REDIS_HEADER
 
 #include "db.h"
-#include <hiredis.h>
+#include <hiredis/hiredis.h>
 
 class DBRedis : public DB {
 public:
