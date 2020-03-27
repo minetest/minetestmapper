@@ -97,6 +97,11 @@ Draw scales on specified image edges (letters \fIt b l r\fP meaning top, bottom,
 Select if database should be traversed exhaustively or using range queries, available: \fInever\fP, \fIy\fP, \fIfull\fP, \fIauto\fP
 
 Defaults to \fIauto\fP. You shouldn't need to change this, but doing so can improve rendering times on large maps.
+For these optimizations to work it is important that you set
+.B min-y
+and
+.B max-y
+when you don't care about the world below e.g. -60 and above 1000 nodes.
 
 .SH MORE INFORMATION
 Website: https://github.com/minetest/minetestmapper

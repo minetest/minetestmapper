@@ -353,7 +353,7 @@ void TileGenerator::openDb(const std::string &input)
 			m_exhaustiveSearch = EXH_NEVER;
 		else if (blocks < 200000)
 			m_exhaustiveSearch = EXH_FULL;
-		else if (y_range < 600)
+		else if (y_range < 42)
 			m_exhaustiveSearch = EXH_Y;
 		else
 			m_exhaustiveSearch = EXH_NEVER;
@@ -364,8 +364,6 @@ void TileGenerator::openDb(const std::string &input)
 				" in worse performance." << std::endl;
 		}
 	}
-	if (m_exhaustiveSearch == EXH_Y)
-		m_exhaustiveSearch = EXH_NEVER; // (TODO remove when implemented)
 	assert(m_exhaustiveSearch != EXH_AUTO);
 }
 
@@ -505,6 +503,30 @@ void TileGenerator::renderMap()
 
 				BlockList blockStack;
 				m_db->getBlocksOnXZ(blockStack, xPos, zPos, m_yMin / 16, yMax);
+				blockStack.sort();
+
+				renderSingle(xPos, zPos, blockStack);
+			}
+			postRenderRow(zPos);
+		}
+	} else if (m_exhaustiveSearch == EXH_Y) {
+#ifndef NDEBUG
+		std::cerr << "Exhaustively searching height of "
+			<< (yMax - (m_yMin / 16)) << " blocks" << std::endl;
+#endif
+		std::vector<BlockPos> positions;
+		positions.reserve(yMax - (m_yMin / 16));
+		for (auto it = m_positions.rbegin(); it != m_positions.rend(); ++it) {
+			int16_t zPos = it->first;
+			for (auto it2 = it->second.rbegin(); it2 != it->second.rend(); ++it2) {
+				int16_t xPos = *it2;
+
+				positions.clear();
+				for (int16_t yPos = m_yMin / 16; yPos < yMax; yPos++)
+					positions.emplace_back(xPos, yPos, zPos);
+
+				BlockList blockStack;
+				m_db->getBlocksByPos(blockStack, positions);
 				blockStack.sort();
 
 				renderSingle(xPos, zPos, blockStack);

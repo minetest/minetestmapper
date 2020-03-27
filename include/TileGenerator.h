@@ -25,7 +25,7 @@ enum {
 
 enum {
 	EXH_NEVER, // Always use range queries
-	EXH_Y,     // Exhaustively search Y space, range queries for X/Z (future TODO)
+	EXH_Y,     // Exhaustively search Y space, range queries for X/Z
 	EXH_FULL,  // Exhaustively search entire requested geometry
 	EXH_AUTO,  // Automatically pick one of the previous modes
 };
