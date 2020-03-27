@@ -3,7 +3,15 @@ compiler:
   - gcc
   - clang
 dist: bionic
-before_install: sudo apt-get install -y cmake libgd-dev libsqlite3-dev libleveldb-dev
+addons:
+  apt:
+    packages:
+      - cmake
+      - libgd-dev
+      - libsqlite3-dev
+      - libleveldb-dev
+      - libpq-dev
+      - postgresql-server-dev-all
 script: ./util/travis/script.sh
 notifications:
   email: false
