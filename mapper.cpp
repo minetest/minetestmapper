@@ -1,9 +1,10 @@
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <getopt.h>
 #include <fstream>
 #include <iostream>
-#include <map>
+#include <utility>
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -12,30 +13,47 @@
 
 static void usage()
 {
-	const char *usage_text = "minetestmapper [options]\n"
-			"  -i/--input <world_path>\n"
-			"  -o/--output <output_image.png>\n"
-			"  --bgcolor <color>\n"
-			"  --scalecolor <color>\n"
-			"  --playercolor <color>\n"
-			"  --origincolor <color>\n"
-			"  --drawscale\n"
-			"  --drawplayers\n"
-			"  --draworigin\n"
-			"  --drawalpha\n"
-			"  --noshading\n"
-			"  --noemptyimage\n"
-			"  --min-y <y>\n"
-			"  --max-y <y>\n"
-			"  --backend <backend>\n"
-			"  --geometry x:y+w+h\n"
-			"  --extent\n"
-			"  --zoom <zoomlevel>\n"
-			"  --colors <colors.txt>\n"
-			"  --scales [t][b][l][r]\n"
-			"  --exhaustive never|y|full|auto\n"
-			"Color format: '#000000'\n";
-	std::cout << usage_text;
+	const std::pair<const char*, const char*> options[] = {
+		{"-i/--input", "<world_path>"},
+		{"-o/--output", "<output_image.png>"},
+		{"--bgcolor", "<color>"},
+		{"--scalecolor", "<color>"},
+		{"--playercolor", "<color>"},
+		{"--origincolor", "<color>"},
+		{"--drawscale", ""},
+		{"--drawplayers", ""},
+		{"--draworigin", ""},
+		{"--drawalpha", ""},
+		{"--noshading", ""},
+		{"--noemptyimage", ""},
+		{"--min-y", "<y>"},
+		{"--max-y", "<y>"},
+		{"--backend", "<backend>"},
+		{"--geometry", "x:y+w+h"},
+		{"--extent", ""},
+		{"--zoom", "<zoomlevel>"},
+		{"--colors", "<colors.txt>"},
+		{"--scales", "[t][b][l][r]"},
+		{"--exhaustive", "never|y|full|auto"},
+	};
+	const char *top_text =
+		"minetestmapper -i <world_path> -o <output_image.png> [options]\n"
+		"Generate an overview image of a Minetest map.\n"
+		"\n"
+		"Options:\n";
+	const char *bottom_text =
+		"\n"
+		"Color format: hexadecimal '#RRGGBB', e.g. '#FF0000' = red\n";
+
+	printf("%s", top_text);
+	for (const auto &p : options)
+		printf("  %-18s%s\n", p.first, p.second);
+	printf("%s", bottom_text);
+	auto backends = TileGenerator::getSupportedBackends();
+	printf("Supported backends: ");
+	for (auto s : backends)
+		printf("%s ", s.c_str());
+	printf("\n");
 }
 
 static bool file_exists(const std::string &path)

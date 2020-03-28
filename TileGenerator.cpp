@@ -311,6 +311,22 @@ void TileGenerator::parseColorsStream(std::istream &in)
 	}
 }
 
+std::set<std::string> TileGenerator::getSupportedBackends()
+{
+	std::set<std::string> r;
+	r.insert("sqlite3");
+#if USE_POSTGRESQL
+	r.insert("postgresql");
+#endif
+#if USE_LEVELDB
+	r.insert("leveldb");
+#endif
+#if USE_REDIS
+	r.insert("redis");
+#endif
+	return r;
+}
+
 void TileGenerator::openDb(const std::string &input)
 {
 	std::string backend = m_backend;

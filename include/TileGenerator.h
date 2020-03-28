@@ -85,11 +85,13 @@ public:
 	void setExhaustiveSearch(int mode);
 	void parseColorsFile(const std::string &fileName);
 	void setBackend(std::string backend);
-	void generate(const std::string &input, const std::string &output);
-	void printGeometry(const std::string &input);
 	void setZoom(int zoom);
 	void setScales(uint flags);
 	void setDontWriteEmpty(bool f);
+
+	void generate(const std::string &input, const std::string &output);
+	void printGeometry(const std::string &input);
+	static std::set<std::string> getSupportedBackends();
 
 private:
 	void parseColorsStream(std::istream &in);
