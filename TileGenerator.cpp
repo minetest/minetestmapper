@@ -330,11 +330,11 @@ std::set<std::string> TileGenerator::getSupportedBackends()
 void TileGenerator::openDb(const std::string &input)
 {
 	std::string backend = m_backend;
-	if(backend == "") {
-		std::ifstream ifs((input + "/world.mt").c_str());
+	if (backend == "") {
+		std::ifstream ifs(input + "/world.mt");
 		if(!ifs.good())
-			throw std::runtime_error("Failed to read world.mt");
-		backend = read_setting("backend", ifs);
+			throw std::runtime_error("Failed to open world.mt");
+		backend = read_setting_default("backend", ifs, "sqlite3");
 		ifs.close();
 	}
 
