@@ -20,7 +20,7 @@ private:
 	int m_blockAirId;
 	int m_blockIgnoreId;
 
-	u8 m_version;
+	u8 m_version, m_contentWidth;
 	ustring m_mapData;
 };
 
