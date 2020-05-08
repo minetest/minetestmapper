@@ -1,5 +1,4 @@
-#ifndef BLOCKDECODER_H
-#define BLOCKDECODER_H
+#pragma once
 
 #include <unordered_map>
 
@@ -12,10 +11,11 @@ public:
 	void reset();
 	void decode(const ustring &data);
 	bool isEmpty() const;
-	std::string getNode(u8 x, u8 y, u8 z) const; // returns "" for air, ignore and invalid nodes
+	// returns "" for air, ignore and invalid nodes
+	const std::string &getNode(u8 x, u8 y, u8 z) const;
 
 private:
-	typedef std::unordered_map<int, std::string> NameMap;
+	typedef std::unordered_map<uint16_t, std::string> NameMap;
 	NameMap m_nameMap;
 	int m_blockAirId;
 	int m_blockIgnoreId;
@@ -23,5 +23,3 @@ private:
 	u8 m_version, m_contentWidth;
 	ustring m_mapData;
 };
-
-#endif // BLOCKDECODER_H

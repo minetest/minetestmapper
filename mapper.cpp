@@ -8,7 +8,7 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
-#include "cmake_config.h"
+#include "config.h"
 #include "TileGenerator.h"
 
 static void usage()
@@ -58,7 +58,7 @@ static void usage()
 
 static bool file_exists(const std::string &path)
 {
-	std::ifstream ifs(path.c_str());
+	std::ifstream ifs(path);
 	return ifs.is_open();
 }
 
@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
 		generator.parseColorsFile(colors);
 		generator.generate(input, output);
 
-	} catch(std::runtime_error &e) {
+	} catch (const std::runtime_error &e) {
 		std::cerr << "Exception: " << e.what() << std::endl;
 		return 1;
 	}

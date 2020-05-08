@@ -9,11 +9,9 @@
 #include "PlayerAttributes.h"
 #include "util.h"
 
-using namespace std;
-
 PlayerAttributes::PlayerAttributes(const std::string &worldDir)
 {
-	std::ifstream ifs((worldDir + "world.mt").c_str());
+	std::ifstream ifs(worldDir + "world.mt");
 	if (!ifs.good())
 		throw std::runtime_error("Failed to read world.mt");
 	std::string backend = read_setting_default("player_backend", ifs, "files");
@@ -39,18 +37,18 @@ void PlayerAttributes::readFiles(const std::string &playersPath)
 		if (ent->d_name[0] == '.')
 			continue;
 
-		string path = playersPath + PATH_SEPARATOR + ent->d_name;
-		ifstream in(path.c_str());
+		std::string path = playersPath + PATH_SEPARATOR + ent->d_name;
+		std::ifstream in(path);
 		if(!in.good())
 			continue;
 
-		string name, position;
+		std::string name, position;
 		name = read_setting("name", in);
 		in.seekg(0);
 		position = read_setting("position", in);
 
 		Player player;
-		istringstream iss(position);
+		std::istringstream iss(position);
 		char tmp;
 		iss >> tmp; // '('
 		iss >> player.x;
@@ -121,13 +119,13 @@ void PlayerAttributes::readSqlite(const std::string &db_name)
 
 /**********/
 
-PlayerAttributes::Players::iterator PlayerAttributes::begin()
+PlayerAttributes::Players::const_iterator PlayerAttributes::begin() const
 {
-	return m_players.begin();
+	return m_players.cbegin();
 }
 
-PlayerAttributes::Players::iterator PlayerAttributes::end()
+PlayerAttributes::Players::const_iterator PlayerAttributes::end() const
 {
-	return m_players.end();
+	return m_players.cend();
 }
 

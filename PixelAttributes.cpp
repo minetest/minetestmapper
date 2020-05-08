@@ -1,14 +1,6 @@
-/*
- * =====================================================================
- *        Version:  1.0
- *        Created:  25.08.2012 10:55:27
- *         Author:  Miroslav Bendík
- *        Company:  LinuxOS.sk
- * =====================================================================
- */
+#include <cstring>
 
 #include "PixelAttributes.h"
-#include <cstring>
 
 PixelAttributes::PixelAttributes():
 	m_width(0)

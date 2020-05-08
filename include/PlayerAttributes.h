@@ -1,5 +1,4 @@
-#ifndef PLAYERATTRIBUTES_H_D7THWFVV
-#define PLAYERATTRIBUTES_H_D7THWFVV
+#pragma once
 
 #include <list>
 #include <string>
@@ -16,8 +15,8 @@ public:
 	typedef std::list<Player> Players;
 
 	PlayerAttributes(const std::string &worldDir);
-	Players::iterator begin();
-	Players::iterator end();
+	Players::const_iterator begin() const;
+	Players::const_iterator end() const;
 
 private:
 	void readFiles(const std::string &playersPath);
@@ -25,6 +24,3 @@ private:
 
 	Players m_players;
 };
-
-#endif /* end of include guard: PLAYERATTRIBUTES_H_D7THWFVV */
-

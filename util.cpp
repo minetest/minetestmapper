@@ -43,3 +43,13 @@ std::string read_setting(const std::string &name, std::istream &is)
 	oss << "Setting '" << name << "' not found";
 	throw std::runtime_error(oss.str());
 }
+
+std::string read_setting_default(const std::string &name, std::istream &is,
+	const std::string &def)
+{
+	try {
+		return read_setting(name, is);
+	} catch(const std::runtime_error &e) {
+		return def;
+	}
+}

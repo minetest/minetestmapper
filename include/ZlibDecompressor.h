@@ -1,14 +1,4 @@
-/*
- * =====================================================================
- *        Version:  1.0
- *        Created:  18.09.2012 10:20:51
- *         Author:  Miroslav Bendík
- *        Company:  LinuxOS.sk
- * =====================================================================
- */
-
-#ifndef ZLIBDECOMPRESSOR_H_ZQL1PN8Q
-#define ZLIBDECOMPRESSOR_H_ZQL1PN8Q
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -31,7 +21,4 @@ private:
 	const unsigned char *m_data;
 	std::size_t m_seekPos;
 	std::size_t m_size;
-}; /* -----  end of class ZlibDecompressor  ----- */
-
-#endif /* end of include guard: ZLIBDECOMPRESSOR_H_ZQL1PN8Q */
-
+};

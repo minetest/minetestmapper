@@ -1,8 +1,6 @@
-#ifndef DB_HEADER
-#define DB_HEADER
+#pragma once
 
-#include <stdint.h>
-#include <map>
+#include <cstdint>
 #include <list>
 #include <vector>
 #include <utility>
@@ -122,4 +120,3 @@ inline BlockPos DB::decodeBlockPos(int64_t hash) const
  * End black magic *
  *******************/
 
-#endif // DB_HEADER

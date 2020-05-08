@@ -1,5 +1,4 @@
-#ifndef IMAGE_HEADER
-#define IMAGE_HEADER
+#pragma once
 
 #include "types.h"
 #include <string>
@@ -9,7 +8,6 @@ struct Color {
 	Color() : r(0), g(0), b(0), a(0) {};
 	Color(u8 r, u8 g, u8 b) : r(r), g(g), b(b), a(255) {};
 	Color(u8 r, u8 g, u8 b, u8 a) : r(r), g(g), b(b), a(a) {};
-	inline Color noAlpha() const { return Color(r, g, b); }
 
 	u8 r, g, b, a;
 };
@@ -18,6 +16,9 @@ class Image {
 public:
 	Image(int width, int height);
 	~Image();
+
+	Image(const Image&) = delete;
+	Image& operator=(const Image&) = delete;
 
 	void setPixel(int x, int y, const Color &c);
 	Color getPixel(int x, int y);
@@ -28,10 +29,6 @@ public:
 	void save(const std::string &filename);
 
 private:
-	Image(const Image&);
-
 	int m_width, m_height;
 	gdImagePtr m_image;
 };
-
-#endif // IMAGE_HEADER

@@ -1,25 +1,15 @@
-/*
- * =====================================================================
- *        Version:  1.0
- *        Created:  25.08.2012 10:55:29
- *         Author:  Miroslav Bendík
- *        Company:  LinuxOS.sk
- * =====================================================================
- */
+#pragma once
 
-#ifndef PIXELATTRIBUTES_H_ADZ35GYF
-#define PIXELATTRIBUTES_H_ADZ35GYF
-
-#include <limits>
-#include <stdint.h>
+#include <climits>
+#include <cstdint>
 #include "config.h"
 
 struct PixelAttribute {
-	PixelAttribute(): height(std::numeric_limits<int>::min()), thickness(0) {};
-	int height;
+	PixelAttribute(): height(INT16_MIN), thickness(0) {};
+	int16_t height;
 	uint8_t thickness;
 	inline bool valid_height() {
-		return height != std::numeric_limits<int>::min();
+		return height != INT16_MIN;
 	}
 };
 
@@ -30,7 +20,9 @@ public:
 	virtual ~PixelAttributes();
 	void setWidth(int width);
 	void scroll();
-	inline PixelAttribute &attribute(int z, int x) { return m_pixelAttributes[z + 1][x + 1]; };
+	inline PixelAttribute &attribute(int z, int x) {
+		return m_pixelAttributes[z + 1][x + 1];
+	};
 
 private:
 	void freeAttributes();
@@ -45,6 +37,3 @@ private:
 	PixelAttribute *m_pixelAttributes[BLOCK_SIZE + 2]; // 1px gradient + empty
 	int m_width;
 };
-
-#endif /* end of include guard: PIXELATTRIBUTES_H_ADZ35GYF */
-

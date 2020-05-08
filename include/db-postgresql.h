@@ -1,5 +1,4 @@
-#ifndef _DB_POSTGRESQL_H
-#define _DB_POSTGRESQL_H
+#pragma once
 
 #include "db.h"
 #include <libpq-fe.h>
@@ -31,5 +30,3 @@ protected:
 private:
 	PGconn *db;
 };
-
-#endif // _DB_POSTGRESQL_H

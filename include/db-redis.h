@@ -1,5 +1,4 @@
-#ifndef DB_REDIS_HEADER
-#define DB_REDIS_HEADER
+#pragma once
 
 #include "db.h"
 #include <unordered_map>
@@ -33,5 +32,3 @@ private:
 	redisContext *ctx;
 	std::string hash;
 };
-
-#endif // DB_REDIS_HEADER

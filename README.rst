@@ -4,6 +4,8 @@ Minetest Mapper C++
 .. image:: https://travis-ci.org/minetest/minetestmapper.svg?branch=master
     :target: https://travis-ci.org/minetest/minetestmapper
 
+Minetestmapper generates an overview image from a Minetest map.
+
 A port of minetestmapper.py to C++ from https://github.com/minetest/minetest/tree/master/util.
 This version is both faster and provides more features than the now deprecated Python script.
 
@@ -12,14 +14,14 @@ Requirements
 
 * libgd
 * sqlite3
-* LevelDB (optional, set ENABLE_LEVELDB=1 in CMake to enable)
-* hiredis library (optional, set ENABLE_REDIS=1 in CMake to enable)
-* Postgres libraries (optional, set ENABLE_POSTGRES=1 in CMake to enable)
+* LevelDB (optional)
+* hiredis (optional)
+* Postgres libraries (optional)
 
 e.g. on Debian:
 ^^^^^^^^^^^^^^^
 
-	sudo apt-get install libgd-dev libsqlite3-dev libleveldb-dev libhiredis-dev libpq-dev
+	sudo apt install libgd-dev libsqlite3-dev libleveldb-dev libhiredis-dev libpq-dev
 
 Windows
 ^^^^^^^
@@ -37,7 +39,7 @@ Compilation
 ::
 
     cmake . -DENABLE_LEVELDB=1
-    make -j2
+    make -j4
 
 Usage
 -----

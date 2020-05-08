@@ -13,7 +13,9 @@
 #include "config.h"
 #include "PlayerAttributes.h"
 #include "BlockDecoder.h"
+#include "Image.h"
 #include "util.h"
+
 #include "db-sqlite3.h"
 #if USE_POSTGRESQL
 #include "db-postgresql.h"
@@ -24,8 +26,6 @@
 #if USE_REDIS
 #include "db-redis.h"
 #endif
-
-using namespace std;
 
 template<typename T>
 static inline T mymax(T a, T b)
@@ -54,6 +54,20 @@ static int round_multiple_nosign(int n, int f)
 static inline unsigned int colorSafeBounds (int channel)
 {
 	return mymin(mymax(channel, 0), 255);
+}
+
+static Color parseColor(const std::string &color)
+{
+	if (color.length() != 7)
+		throw std::runtime_error("Color needs to be 7 characters long");
+	if (color[0] != '#')
+		throw std::runtime_error("Color needs to begin with #");
+	unsigned long col = strtoul(color.c_str() + 1, NULL, 16);
+	u8 b, g, r;
+	b = col & 0xff;
+	g = (col >> 8) & 0xff;
+	r = (col >> 16) & 0xff;
+	return Color(r, g, b);
 }
 
 static Color mixColors(Color a, Color b)
@@ -139,21 +153,6 @@ void TileGenerator::setScales(uint flags)
 	m_scales = flags;
 }
 
-Color TileGenerator::parseColor(const std::string &color)
-{
-	Color parsed;
-	if (color.length() != 7)
-		throw std::runtime_error("Color needs to be 7 characters long");
-	if (color[0] != '#')
-		throw std::runtime_error("Color needs to begin with #");
-	unsigned long col = strtoul(color.c_str() + 1, NULL, 16);
-	parsed.b = col & 0xff;
-	parsed.g = (col >> 8) & 0xff;
-	parsed.r = (col >> 16) & 0xff;
-	parsed.a = 255;
-	return parsed;
-}
-
 void TileGenerator::setDrawOrigin(bool drawOrigin)
 {
 	m_drawOrigin = drawOrigin;
@@ -214,16 +213,15 @@ void TileGenerator::setExhaustiveSearch(int mode)
 
 void TileGenerator::parseColorsFile(const std::string &fileName)
 {
-	ifstream in;
-	in.open(fileName.c_str(), ifstream::in);
-	if (!in.is_open())
+	std::ifstream in(fileName);
+	if (!in.good())
 		throw std::runtime_error("Specified colors file could not be found");
 	parseColorsStream(in);
 }
 
 void TileGenerator::printGeometry(const std::string &input)
 {
-	string input_path = input;
+	std::string input_path = input;
 	if (input_path[input.length() - 1] != PATH_SEPARATOR) {
 		input_path += PATH_SEPARATOR;
 	}
@@ -249,7 +247,7 @@ void TileGenerator::setDontWriteEmpty(bool f)
 
 void TileGenerator::generate(const std::string &input, const std::string &output)
 {
-	string input_path = input;
+	std::string input_path = input;
 	if (input_path[input.length() - 1] != PATH_SEPARATOR) {
 		input_path += PATH_SEPARATOR;
 	}
@@ -305,9 +303,8 @@ void TileGenerator::parseColorsStream(std::istream &in)
 			std::cerr << "Failed to parse color entry '" << line << "'" << std::endl;
 			continue;
 		}
-	
-		ColorEntry color(r, g, b, a, t);
-		m_colorMap[name] = color;
+
+		m_colorMap[name] = ColorEntry(r, g, b, a, t);
 	}
 }
 
@@ -586,39 +583,43 @@ void TileGenerator::renderMapBlock(const BlockDecoder &blk, const BlockPos &pos)
 			if (m_readPixels.get(x, z))
 				continue;
 			int imageX = xBegin + x;
+			auto &attr = m_blockPixelAttributes.attribute(15 - z, xBegin + x);
 
 			for (int y = maxY; y >= minY; --y) {
-				string name = blk.getNode(x, y, z);
-				if (name == "")
+				const std::string &name = blk.getNode(x, y, z);
+				if (name.empty())
 					continue;
 				ColorMap::const_iterator it = m_colorMap.find(name);
 				if (it == m_colorMap.end()) {
 					m_unknownNodes.insert(name);
 					continue;
 				}
-				const Color c = it->second.to_color();
+
+				Color c = it->second.toColor();
+				if (c.a == 0)
+					continue; // node is fully invisible
 				if (m_drawAlpha) {
-					if (m_color[z][x].a == 0)
-						m_color[z][x] = c; // first visible time, no color mixing
-					else
-						m_color[z][x] = mixColors(m_color[z][x], c);
-					if(m_color[z][x].a < 0xff) {
-						// near thickness value to thickness of current node
-						m_thickness[z][x] = (m_thickness[z][x] + it->second.t) / 2.0;
+					if (m_color[z][x].a != 0)
+						c = mixColors(m_color[z][x], c);
+					if (c.a < 255) {
+						// remember color and near thickness value
+						m_color[z][x] = c;
+						m_thickness[z][x] = (m_thickness[z][x] + it->second.t) / 2;
 						continue;
 					}
 					// color became opaque, draw it
-					setZoomed(imageX, imageY, m_color[z][x]);
-					m_blockPixelAttributes.attribute(15 - z, xBegin + x).thickness = m_thickness[z][x];
+					setZoomed(imageX, imageY, c);
+					attr.thickness = m_thickness[z][x];
 				} else {
-					setZoomed(imageX, imageY, c.noAlpha());
+					c.a = 255;
+					setZoomed(imageX, imageY, c);
 				}
 				m_readPixels.set(x, z);
 
 				// do this afterwards so we can record height values
 				// inside transparent nodes (water) too
 				if (!m_readInfo.get(x, z)) {
-					m_blockPixelAttributes.attribute(15 - z, xBegin + x).height = pos.y * 16 + y;
+					attr.height = pos.y * 16 + y;
 					m_readInfo.set(x, z);
 				}
 				break;
@@ -640,17 +641,19 @@ void TileGenerator::renderMapBlockBottom(const BlockPos &pos)
 			if (m_readPixels.get(x, z))
 				continue;
 			int imageX = xBegin + x;
+			auto &attr = m_blockPixelAttributes.attribute(15 - z, xBegin + x);
 
 			// set color since it wasn't done in renderMapBlock()
 			setZoomed(imageX, imageY, m_color[z][x]);
 			m_readPixels.set(x, z);
-			m_blockPixelAttributes.attribute(15 - z, xBegin + x).thickness = m_thickness[z][x];
+			attr.thickness = m_thickness[z][x];
 		}
 	}
 }
 
 void TileGenerator::renderShading(int zPos)
 {
+	auto &a = m_blockPixelAttributes;
 	int zBegin = (m_zMax - zPos) * 16;
 	for (int z = 0; z < 16; ++z) {
 		int imageY = zBegin + z;
@@ -658,23 +661,27 @@ void TileGenerator::renderShading(int zPos)
 			continue;
 		for (int x = 0; x < m_mapWidth; ++x) {
 			if(
-				!m_blockPixelAttributes.attribute(z, x).valid_height() ||
-				!m_blockPixelAttributes.attribute(z, x - 1).valid_height() ||
-				!m_blockPixelAttributes.attribute(z - 1, x).valid_height()
+				!a.attribute(z, x).valid_height() ||
+				!a.attribute(z, x - 1).valid_height() ||
+				!a.attribute(z - 1, x).valid_height()
 			)
 				continue;
 
 			// calculate shadow to apply
-			int y = m_blockPixelAttributes.attribute(z, x).height;
-			int y1 = m_blockPixelAttributes.attribute(z, x - 1).height;
-			int y2 = m_blockPixelAttributes.attribute(z - 1, x).height;
+			int y = a.attribute(z, x).height;
+			int y1 = a.attribute(z, x - 1).height;
+			int y2 = a.attribute(z - 1, x).height;
 			int d = ((y - y1) + (y - y2)) * 12;
+
 			if (m_drawAlpha) { // less visible shadow with increasing "thickness"
-				double t = m_blockPixelAttributes.attribute(z, x).thickness * 1.2;
-				d *= 1.0 - mymin(t, 255.0) / 255.0;
+				float t = a.attribute(z, x).thickness * 1.2f;
+				t = mymin(t, 255.0f);
+				d *= 1.0f - t / 255.0f;
 			}
+
 			d = mymin(d, 36);
 
+			// apply shadow/light by just adding to it pixel values
 			Color c = m_image->getPixel(getImageX(x), getImageY(imageY));
 			c.r = colorSafeBounds(c.r + d);
 			c.g = colorSafeBounds(c.g + d);
@@ -682,7 +689,7 @@ void TileGenerator::renderShading(int zPos)
 			setZoomed(x, imageY, c);
 		}
 	}
-	m_blockPixelAttributes.scroll();
+	a.scroll();
 }
 
 void TileGenerator::renderScale()

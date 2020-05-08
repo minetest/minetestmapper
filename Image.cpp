@@ -17,7 +17,7 @@
 
 // ARGB but with inverted alpha
 
-static inline int color2int(Color c)
+static inline int color2int(const Color &c)
 {
 	u8 a = (255 - c.a) * gdAlphaMax / 255;
 	return (a << 24) | (c.r << 16) | (c.g << 8) | c.b;
@@ -35,6 +35,7 @@ static inline Color int2color(int c)
 	return c2;
 }
 
+#ifndef NDEBUG
 static inline void check_bounds(int x, int y, int width, int height)
 {
 	if(x < 0 || x >= width) {
@@ -50,11 +51,13 @@ static inline void check_bounds(int x, int y, int width, int height)
 		throw std::out_of_range(oss.str());
 	}
 }
+#endif
 
 
 Image::Image(int width, int height) :
 	m_width(width), m_height(height), m_image(NULL)
 {
+	SIZECHECK(0, 0);
 	m_image = gdImageCreateTrueColor(m_width, m_height);
 }
 

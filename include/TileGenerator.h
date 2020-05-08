@@ -1,20 +1,21 @@
 #ifndef TILEGENERATOR_HEADER
 #define TILEGENERATOR_HEADER
 
-#include <iosfwd>
+#include <iostream>
 #include <map>
 #include <set>
-#include <config.h>
 #include <unordered_map>
 #include <unordered_set>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 #include "PixelAttributes.h"
-#include "BlockDecoder.h"
 #include "Image.h"
 #include "db.h"
 #include "types.h"
+
+class BlockDecoder;
+class Image;
 
 enum {
 	SCALE_TOP = (1 << 0),
@@ -31,10 +32,12 @@ enum {
 };
 
 struct ColorEntry {
-	ColorEntry(): r(0), g(0), b(0), a(0), t(0) {};
-	ColorEntry(uint8_t r, uint8_t g, uint8_t b, uint8_t a, uint8_t t): r(r), g(g), b(b), a(a), t(t) {};
-	inline Color to_color() const { return Color(r, g, b, a); }
-	uint8_t r, g, b, a, t;
+	ColorEntry() : r(0), g(0), b(0), a(0), t(0) {};
+	ColorEntry(uint8_t r, uint8_t g, uint8_t b, uint8_t a, uint8_t t) :
+		r(r), g(g), b(b), a(a), t(t) {};
+	inline Color toColor() const { return Color(r, g, b, a); }
+	uint8_t r, g, b, a; // Red, Green, Blue, Alpha
+	uint8_t t; // "thickness" value
 };
 
 struct BitmapThing { // 16x16 bitmap
@@ -73,7 +76,6 @@ public:
 	void setScaleColor(const std::string &scaleColor);
 	void setOriginColor(const std::string &originColor);
 	void setPlayerColor(const std::string &playerColor);
-	Color parseColor(const std::string &color);
 	void setDrawOrigin(bool drawOrigin);
 	void setDrawPlayers(bool drawPlayers);
 	void setDrawScale(bool drawScale);

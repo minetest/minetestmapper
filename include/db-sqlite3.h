@@ -1,5 +1,4 @@
-#ifndef _DB_SQLITE3_H
-#define _DB_SQLITE3_H
+#pragma once
 
 #include "db.h"
 #include <unordered_map>
@@ -32,5 +31,3 @@ private:
 	int16_t blockCachedZ = -10000;
 	std::unordered_map<int16_t, BlockList> blockCache; // indexed by X
 };
-
-#endif // _DB_SQLITE3_H

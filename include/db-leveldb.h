@@ -1,5 +1,4 @@
-#ifndef DB_LEVELDB_HEADER
-#define DB_LEVELDB_HEADER
+#pragma once
 
 #include "db.h"
 #include <unordered_map>
@@ -27,5 +26,3 @@ private:
 	std::unordered_map<int16_t, std::vector<pos2d>> posCache;
 	leveldb::DB *db;
 };
-
-#endif // DB_LEVELDB_HEADER

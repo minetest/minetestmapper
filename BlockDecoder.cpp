@@ -11,7 +11,8 @@ static inline uint16_t readU16(const unsigned char *data)
 	return data[0] << 8 | data[1];
 }
 
-static int readBlockContent(const unsigned char *mapData, u8 contentWidth, unsigned int datapos)
+static inline uint16_t readBlockContent(const unsigned char *mapData,
+	u8 contentWidth, unsigned int datapos)
 {
 	if (contentWidth == 2) {
 		size_t index = datapos << 1;
@@ -21,7 +22,7 @@ static int readBlockContent(const unsigned char *mapData, u8 contentWidth, unsig
 		if (param <= 0x7f)
 			return param;
 		else
-			return (int(param) << 4) | (int(mapData[datapos + 0x2000]) >> 4);
+			return (param << 4) | (mapData[datapos + 0x2000] >> 4);
 	}
 }
 
@@ -125,10 +126,10 @@ void BlockDecoder::decode(const ustring &datastr)
 
 	// Node timers
 	if (version >= 25) {
-		dataOffset++;
+		uint8_t timerLength = data[dataOffset++];
 		uint16_t numTimers = readU16(data + dataOffset);
 		dataOffset += 2;
-		dataOffset += numTimers * 10;
+		dataOffset += numTimers * timerLength;
 	}
 }
 
@@ -138,16 +139,18 @@ bool BlockDecoder::isEmpty() const
 	return m_nameMap.empty();
 }
 
-std::string BlockDecoder::getNode(u8 x, u8 y, u8 z) const
+const static std::string empty;
+
+const std::string &BlockDecoder::getNode(u8 x, u8 y, u8 z) const
 {
 	unsigned int position = x + (y << 4) + (z << 8);
-	int content = readBlockContent(m_mapData.c_str(), m_contentWidth, position);
+	uint16_t content = readBlockContent(m_mapData.c_str(), m_contentWidth, position);
 	if (content == m_blockAirId || content == m_blockIgnoreId)
-		return "";
+		return empty;
 	NameMap::const_iterator it = m_nameMap.find(content);
 	if (it == m_nameMap.end()) {
 		std::cerr << "Skipping node with invalid ID." << std::endl;
-		return "";
+		return empty;
 	}
 	return it->second;
 }
