@@ -13,6 +13,7 @@ public:
 	void decode(const ustring &data);
 	bool isEmpty() const;
 	std::string getNode(u8 x, u8 y, u8 z) const; // returns "" for air, ignore and invalid nodes
+	u8 getParam1(u8 x, u8 y, u8 z) const;
 
 private:
 	typedef std::unordered_map<int, std::string> NameMap;

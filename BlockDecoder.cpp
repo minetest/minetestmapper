@@ -151,3 +151,10 @@ std::string BlockDecoder::getNode(u8 x, u8 y, u8 z) const
 	}
 	return it->second;
 }
+
+u8 BlockDecoder::getParam1(u8 x, u8 y, u8 z) const
+{
+	unsigned int position = x + (y << 4) + (z << 8);
+	unsigned int offset = (m_contentWidth == 2) ? 0x2000 : 0x1000;
+	return m_mapData.c_str()[offset + position];
+}

@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <cstring>
 #include <vector>
+#include <cmath>
 
 #include "TileGenerator.h"
 #include "config.h"
@@ -495,8 +496,6 @@ void TileGenerator::renderMap()
 
 			blk.reset();
 			blk.decode(it.second);
-			if (blk.isEmpty())
-				continue;
 			renderMapBlock(blk, pos);
 
 			// Exit out if all pixels for this MapBlock are covered
@@ -576,6 +575,28 @@ void TileGenerator::renderMap()
 
 void TileGenerator::renderMapBlock(const BlockDecoder &blk, const BlockPos &pos)
 {
+	/***/
+	static bool light_curve_init = false;
+	static float light_curve[16];
+	if (!light_curve_init) {
+		for (u8 i = 0; i < 16; i++)
+			light_curve[i] = expf((i - 15) / 12.0f);
+		light_curve_init = true;
+	}
+	/***/
+	auto light_at = [blk] (u8 x, u8 y, u8 z) -> u8 {
+		return blk.getParam1(x, y, z) >> 4; // night bank
+	};
+	static u8 m_light[16][16];
+	if (blk.isEmpty()) {
+		for (int z = 0; z < 16; ++z) {
+			for (int x = 0; x < 16; ++x) {
+				m_light[z][x] = light_at(x, 0, z);
+			}
+		}
+		return;
+	}
+
 	int xBegin = (pos.x - m_xMin) * 16;
 	int zBegin = (m_zMax - pos.z) * 16;
 	int minY = (pos.y * 16 > m_yMin) ? 0 : m_yMin - pos.y * 16;
@@ -589,14 +610,25 @@ void TileGenerator::renderMapBlock(const BlockDecoder &blk, const BlockPos &pos)
 
 			for (int y = maxY; y >= minY; --y) {
 				string name = blk.getNode(x, y, z);
-				if (name == "")
+				if (name == "") {
+					if (y == 0) m_light[z][x] = light_at(x, 0, z);
 					continue;
+				}
 				ColorMap::const_iterator it = m_colorMap.find(name);
 				if (it == m_colorMap.end()) {
 					m_unknownNodes.insert(name);
 					continue;
 				}
-				const Color c = it->second.to_color();
+				Color c = it->second.to_color();
+				u8 light = (y == 15) ? m_light[z][x] : light_at(x, y+1, z);
+				if (light < 15) light = mymax(light, light_at(x, y, z));
+				if (1) {
+					float l2 = light_curve[light];
+					c.r = colorSafeBounds(c.r * l2);
+					c.g = colorSafeBounds(c.g * l2);
+					c.b = colorSafeBounds(c.b * l2);
+				} else
+					c = Color(light * 17, light * 17, light * 17);
 				if (m_drawAlpha) {
 					if (m_color[z][x].a == 0)
 						m_color[z][x] = c; // first visible time, no color mixing
