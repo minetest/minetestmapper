@@ -18,10 +18,15 @@ Requirements
 * hiredis (optional)
 * Postgres libraries (optional)
 
-e.g. on Debian:
-^^^^^^^^^^^^^^^
+on Debian:
+^^^^^^^^^^
 
 	sudo apt install libgd-dev libsqlite3-dev libleveldb-dev libhiredis-dev libpq-dev
+
+on openSUSE:
+^^^^^^^^^^^^
+
+        sudo zypper install gd-devel sqlite3-devel leveldb-devel hiredis-devel postgresql-devel postgresql-server-devel
 
 Windows
 ^^^^^^^
@@ -39,7 +44,7 @@ Compilation
 ::
 
     cmake . -DENABLE_LEVELDB=1
-    make -j4
+    make -j$(nproc)
 
 Usage
 -----
