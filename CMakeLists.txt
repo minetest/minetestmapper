@@ -1,6 +1,6 @@
+cmake_minimum_required(VERSION 3.5)
+
 project(minetestmapper CXX)
-cmake_minimum_required(VERSION 2.6)
-cmake_policy(SET CMP0003 NEW)
 
 set(VERSION_MAJOR 1)
 set(VERSION_MINOR 0)
@@ -46,8 +46,6 @@ if(NOT CUSTOM_DOCDIR STREQUAL "")
 endif()
 
 #set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-find_package(PkgConfig)
-include(FindPackageHandleStandardArgs)
 
 # Libraries: gd
 
@@ -61,18 +59,12 @@ endif(NOT LIBGD_LIBRARY OR NOT LIBGD_INCLUDE_DIR)
 
 # Libraries: zlib
 
-find_library(ZLIB_LIBRARY z)
-find_path(ZLIB_INCLUDE_DIR zlib.h)
-message (STATUS "zlib library: ${ZLIB_LIBRARY}")
-message (STATUS "zlib headers: ${ZLIB_INCLUDE_DIR}")
-if(NOT ZLIB_LIBRARY OR NOT ZLIB_INCLUDE_DIR)
-	message(FATAL_ERROR "zlib not found!")
-endif(NOT ZLIB_LIBRARY OR NOT ZLIB_INCLUDE_DIR)
+find_package(ZLIB REQUIRED)
 
 # Libraries: sqlite3
 
 find_library(SQLITE3_LIBRARY sqlite3)
-find_path(SQLITE3_INCLUDE_DIR zlib.h)
+find_path(SQLITE3_INCLUDE_DIR sqlite3.h)
 message (STATUS "sqlite3 library: ${SQLITE3_LIBRARY}")
 message (STATUS "sqlite3 headers: ${SQLITE3_INCLUDE_DIR}")
 if(NOT SQLITE3_LIBRARY OR NOT SQLITE3_INCLUDE_DIR)
