@@ -1,0 +1,51 @@
+name: build
+
+# build on c/cpp changes or workflow changes
+on:
+  push:
+    paths:
+      - '**.[ch]'
+      - '**.cpp'
+      - '**/CMakeLists.txt'
+      - '.github/workflows/**.yml'
+  pull_request:
+    paths:
+      - '**.[ch]'
+      - '**.cpp'
+      - '**/CMakeLists.txt'
+      - '.github/workflows/**.yml'
+
+jobs:
+  gcc:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: |
+          source util/ci/script.sh
+          install_linux_deps
+
+      - name: Build
+        run: |
+          source util/ci/script.sh
+          run_build
+        env:
+          CC: gcc
+          CXX: g++
+
+  clang:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: |
+          source util/ci/script.sh
+          install_linux_deps
+
+      - name: Build
+        run: |
+          source util/ci/script.sh
+          run_build
+        env:
+          CC: clang
+          CXX: clang++

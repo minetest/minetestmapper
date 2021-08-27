@@ -1,13 +1,13 @@
 Minetest Mapper C++
 ===================
 
-.. image:: https://travis-ci.org/minetest/minetestmapper.svg?branch=master
-    :target: https://travis-ci.org/minetest/minetestmapper
+.. image:: https://github.com/minetest/minetestmapper/workflows/build/badge.svg
+    :target: https://github.com/minetest/minetestmapper/actions/workflows/build.yml
 
 Minetestmapper generates an overview image from a Minetest map.
 
-A port of minetestmapper.py to C++ from https://github.com/minetest/minetest/tree/master/util.
-This version is both faster and provides more features than the now deprecated Python script.
+A port of minetestmapper.py to C++ from https://github.com/minetest/minetest/tree/0.4.17/util.
+This version is both faster and provides more features than the now obsolete Python script.
 
 Requirements
 ------------
