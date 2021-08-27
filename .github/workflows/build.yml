@@ -33,6 +33,11 @@ jobs:
           CC: gcc
           CXX: g++
 
+      - name: Test
+        run: |
+          source util/ci/script.sh
+          do_functional_test
+
   clang:
     runs-on: ubuntu-20.04
     steps:
@@ -49,3 +54,8 @@ jobs:
         env:
           CC: clang
           CXX: clang++
+
+      - name: Test
+        run: |
+          source util/ci/script.sh
+          do_functional_test

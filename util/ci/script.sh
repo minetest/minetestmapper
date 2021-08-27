@@ -13,3 +13,15 @@ run_build() {
 
 	make -j2
 }
+
+do_functional_test() {
+	mkdir testmap
+	echo "backend = sqlite3" >testmap/world.mt
+	sqlite3 testmap/map.sqlite <<END
+CREATE TABLE blocks(pos INT,data BLOB);
+INSERT INTO blocks(pos, data) VALUES(0, x'$(cat util/ci/test_block)');
+END
+
+	./minetestmapper --noemptyimage -i ./testmap -o map.png
+	file map.png
+}
