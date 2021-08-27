@@ -1,10 +1,14 @@
-colors.txt
+*~
+
 minetestmapper
 minetestmapper.exe
+colors.txt
+
 CMakeCache.txt
 CMakeFiles/
-CPack*
+CPack*.cmake
+_CPack_Packages/
+install_manifest.txt
 Makefile
 cmake_install.cmake
 cmake_config.h
-*~

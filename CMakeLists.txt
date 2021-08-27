@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(minetestmapper CXX)
-
-set(VERSION_MAJOR 1)
-set(VERSION_MINOR 0)
-set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}")
+project(minetestmapper
+	VERSION 1.0
+	LANGUAGES CXX
+)
 
 # Stuff & Paths
 
@@ -13,18 +12,17 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -DNDEBUG")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g2 -Wall")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(WIN32)
 	set(SHAREDIR ".")
 	set(BINDIR ".")
 	set(DOCDIR ".")
 else()
-	set(SHAREDIR "${CMAKE_INSTALL_PREFIX}/share/minetest") # reuse Minetest share dir
-	set(BINDIR "${CMAKE_INSTALL_PREFIX}/bin")
-	set(DOCDIR "${CMAKE_INSTALL_PREFIX}/share/doc/${PROJECT_NAME}")
-	set(MANDIR "${CMAKE_INSTALL_PREFIX}/share/man")
+	set(SHAREDIR "share/minetest") # reuse Minetest share dir
+	set(BINDIR "bin")
+	set(DOCDIR "share/doc/${PROJECT_NAME}")
+	set(MANDIR "share/man")
 endif()
 
 set(CUSTOM_SHAREDIR "" CACHE STRING "Directory to install data files into")
@@ -77,7 +75,17 @@ option(ENABLE_POSTGRESQL "Enable PostgreSQL backend" TRUE)
 set(USE_POSTGRESQL FALSE)
 
 if(ENABLE_POSTGRESQL)
-	find_package("PostgreSQL")
+	if(CMAKE_VERSION VERSION_LESS "3.20")
+		find_package(PostgreSQL QUIET)
+		# Before CMake 3.20 FindPostgreSQL.cmake always looked for server includes
+		# but we don't need them, so continue anyway if only those are missing.
+		if(PostgreSQL_INCLUDE_DIR AND PostgreSQL_LIBRARY)
+			set(PostgreSQL_FOUND TRUE)
+			set(PostgreSQL_INCLUDE_DIRS ${PostgreSQL_INCLUDE_DIR})
+		endif()
+	else()
+		find_package(PostgreSQL)
+	endif()
 
 	if(PostgreSQL_FOUND)
 		set(USE_POSTGRESQL TRUE)
@@ -146,9 +154,18 @@ configure_file(
 	"${PROJECT_SOURCE_DIR}/include/cmake_config.h.in"
 	"${PROJECT_BINARY_DIR}/cmake_config.h"
 )
-add_definitions ( -DUSE_CMAKE_CONFIG_H )
+add_definitions(-DUSE_CMAKE_CONFIG_H)
 
-set(mapper_SRCS
+if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+	set(CMAKE_CXX_FLAGS_DEBUG "-Og -g2")
+	add_compile_options(-Wall -pipe)
+endif()
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+	add_definitions(-DNDEBUG)
+endif()
+
+add_executable(minetestmapper
 	BlockDecoder.cpp
 	PixelAttributes.cpp
 	PlayerAttributes.cpp
@@ -158,22 +175,9 @@ set(mapper_SRCS
 	mapper.cpp
 	util.cpp
 	db-sqlite3.cpp
-)
-
-if(USE_POSTGRESQL)
-	set(mapper_SRCS ${mapper_SRCS} db-postgresql.cpp)
-endif(USE_POSTGRESQL)
-
-if(USE_LEVELDB)
-	set(mapper_SRCS ${mapper_SRCS} db-leveldb.cpp)
-endif(USE_LEVELDB)
-
-if(USE_REDIS)
-	set(mapper_SRCS ${mapper_SRCS} db-redis.cpp)
-endif(USE_REDIS)
-
-add_executable(minetestmapper
-	${mapper_SRCS}
+	$<$<BOOL:${USE_POSTGRESQL}>:db-postgresql.cpp>
+	$<$<BOOL:${USE_LEVELDB}>:db-leveldb.cpp>
+	$<$<BOOL:${USE_REDIS}>:db-redis.cpp>
 )
 
 target_link_libraries(
@@ -198,16 +202,14 @@ if(UNIX)
 endif()
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Overview mapper for Minetest")
-set(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 set(CPACK_PACKAGE_VENDOR "celeron55")
 set(CPACK_PACKAGE_CONTACT "Perttu Ahola <celeron55@gmail.com>")
 
 if(WIN32)
-	set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${VERSION_STRING}-win32")
+	set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}-win32")
 	set(CPACK_GENERATOR ZIP)
 else()
-	set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${VERSION_STRING}-linux")
+	set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}-linux")
 	set(CPACK_GENERATOR TGZ)
 	set(CPACK_SOURCE_GENERATOR TGZ)
 endif()

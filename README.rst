@@ -18,21 +18,22 @@ Requirements
 * hiredis (optional)
 * Postgres libraries (optional)
 
-on Debian:
-^^^^^^^^^^
+on Debian/Ubuntu:
+^^^^^^^^^^^^^^^^^
 
-	sudo apt install libgd-dev libsqlite3-dev libleveldb-dev libhiredis-dev libpq-dev
+``sudo apt install libgd-dev libsqlite3-dev libleveldb-dev libhiredis-dev libpq-dev``
 
 on openSUSE:
 ^^^^^^^^^^^^
 
-        sudo zypper install gd-devel sqlite3-devel leveldb-devel hiredis-devel postgresql-devel postgresql-server-devel
+``sudo zypper install gd-devel sqlite3-devel leveldb-devel hiredis-devel postgresql-devel``
 
-Windows
-^^^^^^^
-Minetestmapper for Windows can be downloaded here: https://github.com/minetest/minetestmapper/releases
+for Windows:
+^^^^^^^^^^^^
+Minetestmapper for Windows can be downloaded `from the Releases section
+<https://github.com/minetest/minetestmapper/releases>`_.
 
-After extracting the archive, minetestmapper can be invoked from cmd.exe:
+After extracting the archive, it can be invoked from cmd.exe:
 ::
 
 	cd C:\Users\yourname\Desktop\example\path
