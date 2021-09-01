@@ -1,8 +1,9 @@
 #pragma once
 
+#include <cstdint>
 #include <unordered_map>
-
 #include "types.h"
+#include <ZstdDecompressor.h>
 
 class BlockDecoder {
 public:
@@ -17,9 +18,11 @@ public:
 private:
 	typedef std::unordered_map<uint16_t, std::string> NameMap;
 	NameMap m_nameMap;
-	int m_blockAirId;
-	int m_blockIgnoreId;
+	uint16_t m_blockAirId, m_blockIgnoreId;
 
 	u8 m_version, m_contentWidth;
 	ustring m_mapData;
+
+	// one instance for performance
+	ZstdDecompressor m_zstd_decompressor;
 };

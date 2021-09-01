@@ -43,7 +43,7 @@ if(NOT CUSTOM_DOCDIR STREQUAL "")
         message(STATUS "Using DOCDIR=${DOCDIR}")
 endif()
 
-#set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # Libraries: gd
 
@@ -58,6 +58,10 @@ endif(NOT LIBGD_LIBRARY OR NOT LIBGD_INCLUDE_DIR)
 # Libraries: zlib
 
 find_package(ZLIB REQUIRED)
+
+# Libraries: zstd
+
+find_package(Zstd REQUIRED)
 
 # Libraries: sqlite3
 
@@ -148,6 +152,7 @@ include_directories(
 	${SQLITE3_INCLUDE_DIR}
 	${LIBGD_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIR}
+	${ZSTD_INCLUDE_DIR}
 )
 
 configure_file(
@@ -171,6 +176,7 @@ add_executable(minetestmapper
 	PlayerAttributes.cpp
 	TileGenerator.cpp
 	ZlibDecompressor.cpp
+	ZstdDecompressor.cpp
 	Image.cpp
 	mapper.cpp
 	util.cpp
@@ -188,6 +194,7 @@ target_link_libraries(
 	${REDIS_LIBRARY}
 	${LIBGD_LIBRARY}
 	${ZLIB_LIBRARY}
+	${ZSTD_LIBRARY}
 )
 
 # Installing & Packaging

@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -39,7 +38,7 @@ void BlockDecoder::reset()
 
 	m_version = 0;
 	m_contentWidth = 0;
-	m_mapData = ustring();
+	m_mapData.clear();
 }
 
 void BlockDecoder::decode(const ustring &datastr)
@@ -49,7 +48,6 @@ void BlockDecoder::decode(const ustring &datastr)
 	// TODO: bounds checks
 
 	uint8_t version = data[0];
-	//uint8_t flags = data[1];
 	if (version < 22) {
 		std::ostringstream oss;
 		oss << "Unsupported map version " << (int)version;
@@ -57,11 +55,45 @@ void BlockDecoder::decode(const ustring &datastr)
 	}
 	m_version = version;
 
+	ustring datastr2;
+	if (version >= 29) {
+		// decompress whole block at once
+		m_zstd_decompressor.setData(data, length, 1);
+		datastr2 = m_zstd_decompressor.decompress();
+		data = datastr2.c_str();
+		length = datastr2.size();
+	}
+
 	size_t dataOffset = 0;
-	if (version >= 27)
+	if (version >= 29)
+		dataOffset = 7;
+	else if (version >= 27)
 		dataOffset = 4;
 	else
 		dataOffset = 2;
+
+	auto decode_mapping = [&] () {
+		dataOffset++; // mapping version
+		uint16_t numMappings = readU16(data + dataOffset);
+		dataOffset += 2;
+		for (int i = 0; i < numMappings; ++i) {
+			uint16_t nodeId = readU16(data + dataOffset);
+			dataOffset += 2;
+			uint16_t nameLen = readU16(data + dataOffset);
+			dataOffset += 2;
+			std::string name(reinterpret_cast<const char *>(data) + dataOffset, nameLen);
+			if (name == "air")
+				m_blockAirId = nodeId;
+			else if (name == "ignore")
+				m_blockIgnoreId = nodeId;
+			else
+				m_nameMap[nodeId] = name;
+			dataOffset += nameLen;
+		}
+	};
+
+	if (version >= 29)
+		decode_mapping();
 
 	uint8_t contentWidth = data[dataOffset];
 	dataOffset++;
@@ -73,14 +105,20 @@ void BlockDecoder::decode(const ustring &datastr)
 		throw std::runtime_error("unsupported map version (paramsWidth)");
 	m_contentWidth = contentWidth;
 
+	if (version >= 29) {
+		m_mapData.resize((contentWidth + paramsWidth) * 4096);
+		m_mapData.assign(data + dataOffset, m_mapData.size());
+		return; // we have read everything we need and can return early
+	}
 
+	// version < 29
 	ZlibDecompressor decompressor(data, length);
 	decompressor.setSeekPos(dataOffset);
 	m_mapData = decompressor.decompress();
 	decompressor.decompress(); // unused metadata
 	dataOffset = decompressor.seekPos();
 
-	// Skip unused data
+	// Skip unused node timers
 	if (version == 23)
 		dataOffset += 1;
 	if (version == 24) {
@@ -104,33 +142,7 @@ void BlockDecoder::decode(const ustring &datastr)
 	dataOffset += 4; // Skip timestamp
 
 	// Read mapping
-	{
-		dataOffset++; // mapping version
-		uint16_t numMappings = readU16(data + dataOffset);
-		dataOffset += 2;
-		for (int i = 0; i < numMappings; ++i) {
-			uint16_t nodeId = readU16(data + dataOffset);
-			dataOffset += 2;
-			uint16_t nameLen = readU16(data + dataOffset);
-			dataOffset += 2;
-			std::string name(reinterpret_cast<const char *>(data) + dataOffset, nameLen);
-			if (name == "air")
-				m_blockAirId = nodeId;
-			else if (name == "ignore")
-				m_blockIgnoreId = nodeId;
-			else
-				m_nameMap[nodeId] = name;
-			dataOffset += nameLen;
-		}
-	}
-
-	// Node timers
-	if (version >= 25) {
-		uint8_t timerLength = data[dataOffset++];
-		uint16_t numTimers = readU16(data + dataOffset);
-		dataOffset += 2;
-		dataOffset += numTimers * timerLength;
-	}
+	decode_mapping();
 }
 
 bool BlockDecoder::isEmpty() const
