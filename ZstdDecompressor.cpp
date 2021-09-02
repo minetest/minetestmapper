@@ -47,9 +47,9 @@ ustring ZstdDecompressor::decompress()
 			buffer.resize(outbuf.size);
 			outbuf.dst = &buffer[0];
 		}
+		if (ret && ZSTD_isError(ret))
+			throw DecompressError();
 	} while (ret != 0);
-	if (ZSTD_isError(ret))
-		throw DecompressError();
 
 	m_seekPos = inbuf.pos;
 	buffer.resize(outbuf.pos);
