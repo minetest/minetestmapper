@@ -1,5 +1,4 @@
-#ifndef TILEGENERATOR_HEADER
-#define TILEGENERATOR_HEADER
+#pragma once
 
 #include <iostream>
 #include <map>
@@ -110,6 +109,7 @@ private:
 	void renderPlayers(const std::string &inputPath);
 	void writeImage(const std::string &output);
 	void printUnknown();
+	void reportProgress(size_t count);
 	int getImageX(int val, bool absolute=false) const;
 	int getImageY(int val, bool absolute=false) const;
 	void setZoomed(int x, int y, Color color);
@@ -144,7 +144,7 @@ private:
 	int16_t m_geomY; /* Y in terms of rendered image, Z in the world */
 	int16_t m_geomX2;
 	int16_t m_geomY2;
-	/* */
+
 	int m_mapWidth;
 	int m_mapHeight;
 	int m_exhaustiveSearch;
@@ -158,6 +158,7 @@ private:
 
 	int m_zoom;
 	uint m_scales;
-}; // class TileGenerator
 
-#endif // TILEGENERATOR_HEADER
+	size_t m_progressMax;
+	int m_progressLast; // percentage
+}; // class TileGenerator

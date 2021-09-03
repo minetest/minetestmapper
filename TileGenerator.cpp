@@ -112,7 +112,9 @@ TileGenerator::TileGenerator():
 	m_geomY2(2048),
 	m_exhaustiveSearch(EXH_AUTO),
 	m_zoom(1),
-	m_scales(SCALE_LEFT | SCALE_TOP)
+	m_scales(SCALE_LEFT | SCALE_TOP),
+	m_progressMax(0),
+	m_progressLast(-1)
 {
 }
 
@@ -354,11 +356,10 @@ void TileGenerator::openDb(const std::string &input)
 
 	// Determine how we're going to traverse the database (heuristic)
 	if (m_exhaustiveSearch == EXH_AUTO) {
-		using u64 = uint64_t;
-		u64 y_range = (m_yMax / 16 + 1) - (m_yMin / 16);
-		u64 blocks = (u64)(m_geomX2 - m_geomX) * y_range * (u64)(m_geomY2 - m_geomY);
+		size_t y_range = (m_yMax / 16 + 1) - (m_yMin / 16);
+		size_t blocks = (m_geomX2 - m_geomX) * y_range * (m_geomY2 - m_geomY);
 #ifndef NDEBUG
-		std::cout << "Heuristic parameters:"
+		std::cerr << "Heuristic parameters:"
 			<< " preferRangeQueries()=" << m_db->preferRangeQueries()
 			<< " y_range=" << y_range << " blocks=" << blocks << std::endl;
 #endif
@@ -415,11 +416,12 @@ void TileGenerator::loadBlocks()
 			m_positions[pos.z].emplace(pos.x);
 		}
 
-#ifndef NDEBUG
 		int count = 0;
 		for (const auto &it : m_positions)
 			count += it.second.size();
-		std::cout << "Loaded " << count
+		m_progressMax = count;
+#ifndef NDEBUG
+		std::cerr << "Loaded " << count
 			<< " positions (across Z: " << m_positions.size() << ") for rendering" << std::endl;
 #endif
 	}
@@ -473,6 +475,7 @@ void TileGenerator::renderMap()
 {
 	BlockDecoder blk;
 	const int16_t yMax = m_yMax / 16 + 1;
+	size_t count = 0;
 
 	auto renderSingle = [&] (int16_t xPos, int16_t zPos, BlockList &blockStack) {
 		m_readPixels.reset();
@@ -519,6 +522,7 @@ void TileGenerator::renderMap()
 				blockStack.sort();
 
 				renderSingle(xPos, zPos, blockStack);
+				reportProgress(count++);
 			}
 			postRenderRow(zPos);
 		}
@@ -543,17 +547,21 @@ void TileGenerator::renderMap()
 				blockStack.sort();
 
 				renderSingle(xPos, zPos, blockStack);
+				reportProgress(count++);
 			}
 			postRenderRow(zPos);
 		}
 	} else if (m_exhaustiveSearch == EXH_FULL) {
+		const size_t span_y = yMax - (m_yMin / 16);
+		m_progressMax = (m_geomX2 - m_geomX) * span_y * (m_geomY2 - m_geomY);
 #ifndef NDEBUG
 		std::cerr << "Exhaustively searching "
-			<< (m_geomX2 - m_geomX) << "x" << (yMax - (m_yMin / 16)) << "x"
+			<< (m_geomX2 - m_geomX) << "x" << span_y << "x"
 			<< (m_geomY2 - m_geomY) << " blocks" << std::endl;
 #endif
+
 		std::vector<BlockPos> positions;
-		positions.reserve(yMax - (m_yMin / 16));
+		positions.reserve(span_y);
 		for (int16_t zPos = m_geomY2 - 1; zPos >= m_geomY; zPos--) {
 			for (int16_t xPos = m_geomX2 - 1; xPos >= m_geomX; xPos--) {
 				positions.clear();
@@ -565,10 +573,13 @@ void TileGenerator::renderMap()
 				blockStack.sort();
 
 				renderSingle(xPos, zPos, blockStack);
+				reportProgress(count++);
 			}
 			postRenderRow(zPos);
 		}
 	}
+
+	reportProgress(m_progressMax);
 }
 
 void TileGenerator::renderMapBlock(const BlockDecoder &blk, const BlockPos &pos)
@@ -799,6 +810,27 @@ void TileGenerator::printUnknown()
 	std::cerr << "Unknown nodes:" << std::endl;
 	for (const auto &node : m_unknownNodes)
 		std::cerr << "\t" << node << std::endl;
+}
+
+void TileGenerator::reportProgress(size_t count)
+{
+	if (!m_progressMax)
+		return;
+	int percent = count / static_cast<float>(m_progressMax) * 100;
+	if (percent == m_progressLast)
+		return;
+	m_progressLast = percent;
+
+	// Print a nice-looking ASCII progress bar
+	char bar[51] = {0};
+	memset(bar, ' ', 50);
+	int i = 0, j = percent;
+	for (; j >= 2; j -= 2)
+		bar[i++] = '=';
+	if (j)
+		bar[i++] = '-';
+	std::cout << "[" << bar << "] " << percent << "% " << (percent == 100 ? "\n" : "\r");
+	std::cout.flush();
 }
 
 inline int TileGenerator::getImageX(int val, bool absolute) const
