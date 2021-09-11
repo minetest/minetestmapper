@@ -9,6 +9,11 @@ Minetestmapper generates an overview image from a Minetest map.
 A port of minetestmapper.py to C++ from https://github.com/minetest/minetest/tree/0.4.17/util.
 This version is both faster and provides more features than the now obsolete Python script.
 
+Minetestmapper ships with a colors.txt file for Minetest Game, if you use a different game or have
+many mods installed you should generate a matching colors.txt for better results.
+The `generate_colorstxt.py script 
+<./util/generate_colorstxt.py>`_ in the util folder exists for this purpose, detailed instructions can be found within.
+
 Requirements
 ------------
 
