@@ -17,6 +17,7 @@ The `generate_colorstxt.py script
 Requirements
 ------------
 
+* C++ compiler, zlib, zstd
 * libgd
 * sqlite3
 * LevelDB (optional)
@@ -26,12 +27,12 @@ Requirements
 on Debian/Ubuntu:
 ^^^^^^^^^^^^^^^^^
 
-``sudo apt install libgd-dev libsqlite3-dev libleveldb-dev libhiredis-dev libpq-dev``
+``sudo apt install cmake libgd-dev libhiredis-dev libleveldb-dev libpq-dev libsqlite3-dev zlib1g-dev libzstd-dev``
 
 on openSUSE:
 ^^^^^^^^^^^^
 
-``sudo zypper install gd-devel sqlite3-devel leveldb-devel hiredis-devel postgresql-devel``
+``sudo zypper install gd-devel hiredis-devel leveldb-devel postgresql-devel sqlite3-devel zlib-devel libzstd-devel``
 
 for Windows:
 ^^^^^^^^^^^^
