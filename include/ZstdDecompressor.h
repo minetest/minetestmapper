@@ -1,13 +1,12 @@
 #pragma once
 
-#include <cstdlib>
-#include <string>
+#include <exception>
 #include "types.h"
 
 class ZstdDecompressor
 {
 public:
-	class DecompressError {};
+	class DecompressError : std::exception {};
 
 	ZstdDecompressor();
 	~ZstdDecompressor();

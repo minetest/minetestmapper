@@ -1,24 +1,21 @@
 #pragma once
 
-#include <cstdlib>
-#include <string>
+#include <exception>
 #include "types.h"
-
 
 class ZlibDecompressor
 {
 public:
-	class DecompressError {
-	};
+	class DecompressError : std::exception {};
 
-	ZlibDecompressor(const unsigned char *data, std::size_t size);
+	ZlibDecompressor(const u8 *data, size_t size);
 	~ZlibDecompressor();
-	void setSeekPos(std::size_t seekPos);
-	std::size_t seekPos() const;
+	void setSeekPos(size_t seekPos);
+	size_t seekPos() const;
 	ustring decompress();
 
 private:
-	const unsigned char *m_data;
-	std::size_t m_seekPos;
-	std::size_t m_size;
+	const u8 *m_data;
+	size_t m_seekPos;
+	size_t m_size;
 };
