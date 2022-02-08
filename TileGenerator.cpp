@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <cstring>
 #include <vector>
+#include <type_traits>
+#include <limits>
 
 #include "TileGenerator.h"
 #include "config.h"
@@ -27,6 +29,10 @@
 #include "db-redis.h"
 #endif
 
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
 template<typename T>
 static inline T mymax(T a, T b)
 {
@@ -37,6 +43,41 @@ template<typename T>
 static inline T mymin(T a, T b)
 {
 	return (a > b) ? b : a;
+}
+
+// saturating multiplication
+template<typename T, class = typename std::enable_if<std::is_unsigned<T>::value>::type>
+inline T sat_mul(T a, T b)
+{
+#if __has_builtin(__builtin_mul_overflow)
+	T res;
+	if (__builtin_mul_overflow(a, b, &res))
+		return std::numeric_limits<T>::max();
+	return res;
+#else
+	const int bits = sizeof(T) * 8;
+	int hb_a = 0, hb_b = 0;
+	for (int i = bits - 1; i >= 0; i--) {
+		if (a & (static_cast<T>(1) << i)) {
+			hb_a = i; break;
+		}
+	}
+	for (int i = bits - 1; i >= 0; i--) {
+		if (b & (static_cast<T>(1) << i)) {
+			hb_b = i; break;
+		}
+	}
+	// log2(a) + log2(b) >= log2(MAX) <=> calculation will overflow
+	if (hb_a + hb_b >= bits)
+		return std::numeric_limits<T>::max();
+	return a * b;
+#endif
+}
+
+template<typename T>
+inline T sat_mul(T a, T b, T c)
+{
+	return sat_mul(sat_mul(a, b), c);
 }
 
 // rounds n (away from 0) to a multiple of f while preserving the sign of n
@@ -357,7 +398,7 @@ void TileGenerator::openDb(const std::string &input)
 	// Determine how we're going to traverse the database (heuristic)
 	if (m_exhaustiveSearch == EXH_AUTO) {
 		size_t y_range = (m_yMax / 16 + 1) - (m_yMin / 16);
-		size_t blocks = (m_geomX2 - m_geomX) * y_range * (m_geomY2 - m_geomY);
+		size_t blocks = sat_mul<size_t>(m_geomX2 - m_geomX, y_range, m_geomY2 - m_geomY);
 #ifndef NDEBUG
 		std::cerr << "Heuristic parameters:"
 			<< " preferRangeQueries()=" << m_db->preferRangeQueries()
@@ -416,7 +457,7 @@ void TileGenerator::loadBlocks()
 			m_positions[pos.z].emplace(pos.x);
 		}
 
-		int count = 0;
+		size_t count = 0;
 		for (const auto &it : m_positions)
 			count += it.second.size();
 		m_progressMax = count;
