@@ -43,17 +43,19 @@ struct BitmapThing { // 16x16 bitmap
 		for (int i = 0; i < 16; ++i)
 			val[i] = 0;
 	}
-	inline bool full() const {
+	inline bool any_neq(uint16_t v) const {
 		for (int i = 0; i < 16; ++i) {
-			if (val[i] != 0xffff)
-				return false;
+			if (val[i] != v)
+				return true;
 		}
-		return true;
+		return false;
 	}
+	inline bool any() const { return any_neq(0); }
+	inline bool full() const { return !any_neq(0xffff); }
 	inline void set(unsigned int x, unsigned int z) {
 		val[z] |= (1 << x);
 	}
-	inline bool get(unsigned int x, unsigned int z) {
+	inline bool get(unsigned int x, unsigned int z) const {
 		return !!(val[z] & (1 << x));
 	}
 
@@ -148,11 +150,12 @@ private:
 	int m_mapWidth;
 	int m_mapHeight;
 	int m_exhaustiveSearch;
+	std::set<std::string> m_unknownNodes;
+	bool m_renderedAny;
 	std::map<int16_t, std::set<int16_t>> m_positions; /* indexed by Z, contains X coords */
 	ColorMap m_colorMap;
 	BitmapThing m_readPixels;
 	BitmapThing m_readInfo;
-	std::set<std::string> m_unknownNodes;
 	Color m_color[16][16];
 	uint8_t m_thickness[16][16];
 

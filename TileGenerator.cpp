@@ -140,6 +140,7 @@ TileGenerator::TileGenerator():
 	m_geomX2(2048),
 	m_geomY2(2048),
 	m_exhaustiveSearch(EXH_AUTO),
+	m_renderedAny(false),
 	m_zoom(1),
 	m_scales(SCALE_LEFT | SCALE_TOP),
 	m_progressMax(0),
@@ -542,6 +543,7 @@ void TileGenerator::renderMap()
 		}
 		if (!m_readPixels.full())
 			renderMapBlockBottom(blockStack.begin()->first);
+		m_renderedAny |= m_readInfo.any();
 	};
 	auto postRenderRow = [&] (int16_t zPos) {
 		if (m_shading)
@@ -847,6 +849,11 @@ void TileGenerator::printUnknown()
 	std::cerr << "Unknown nodes:" << std::endl;
 	for (const auto &node : m_unknownNodes)
 		std::cerr << "\t" << node << std::endl;
+	if (!m_renderedAny) {
+		std::cerr << "The map was read successfully and not empty, but none of the "
+			"encountered nodes had a color associated.\nCheck that you're using "
+			"the right colors.txt. It should match the game you have installed." << std::endl;
+	}
 }
 
 void TileGenerator::reportProgress(size_t count)
