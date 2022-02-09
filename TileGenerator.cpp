@@ -33,18 +33,6 @@
 #define __has_builtin(x) 0
 #endif
 
-template<typename T>
-static inline T mymax(T a, T b)
-{
-	return (a > b) ? a : b;
-}
-
-template<typename T>
-static inline T mymin(T a, T b)
-{
-	return (a > b) ? b : a;
-}
-
 // saturating multiplication
 template<typename T, class = typename std::enable_if<std::is_unsigned<T>::value>::type>
 inline T sat_mul(T a, T b)
@@ -92,7 +80,7 @@ static int round_multiple_nosign(int n, int f)
 		return sign * (abs_n + f - (abs_n % f));
 }
 
-static inline unsigned int colorSafeBounds (int channel)
+static inline unsigned int colorSafeBounds(int channel)
 {
 	return mymin(mymax(channel, 0), 255);
 }
@@ -267,12 +255,8 @@ void TileGenerator::parseColorsFile(const std::string &fileName)
 	parseColorsStream(in);
 }
 
-void TileGenerator::printGeometry(const std::string &input)
+void TileGenerator::printGeometry(const std::string &input_path)
 {
-	std::string input_path = input;
-	if (input_path.back() != PATH_SEPARATOR)
-		input_path += PATH_SEPARATOR;
-
 	setExhaustiveSearch(EXH_NEVER);
 	openDb(input_path);
 	loadBlocks();
@@ -284,15 +268,10 @@ void TileGenerator::printGeometry(const std::string &input)
 		<< std::endl;
 
 	closeDatabase();
-
 }
 
-void TileGenerator::dumpBlock(const std::string &input, BlockPos pos)
+void TileGenerator::dumpBlock(const std::string &input_path, BlockPos pos)
 {
-	std::string input_path = input;
-	if (input_path.back() != PATH_SEPARATOR)
-		input_path += PATH_SEPARATOR;
-
 	openDb(input_path);
 
 	BlockList list;
@@ -309,12 +288,8 @@ void TileGenerator::dumpBlock(const std::string &input, BlockPos pos)
 	closeDatabase();
 }
 
-void TileGenerator::generate(const std::string &input, const std::string &output)
+void TileGenerator::generate(const std::string &input_path, const std::string &output)
 {
-	std::string input_path = input;
-	if (input_path.back() != PATH_SEPARATOR)
-		input_path += PATH_SEPARATOR;
-
 	if (m_dontWriteEmpty) // FIXME: possible too, just needs to be done differently
 		setExhaustiveSearch(EXH_NEVER);
 	openDb(input_path);
@@ -348,21 +323,19 @@ void TileGenerator::parseColorsStream(std::istream &in)
 	while (in.good()) {
 		in.getline(line, sizeof(line));
 
-		for(char *p = line; *p; p++) {
-			if(*p != '#')
+		for (char *p = line; *p; p++) {
+			if (*p != '#')
 				continue;
 			*p = '\0'; // Cut off at the first #
 			break;
 		}
-		if(strlen(line) == 0)
+		if(!line[0])
 			continue;
 
-		char name[128 + 1] = {0};
-		unsigned int r, g, b, a, t;
-		a = 255;
-		t = 0;
-		int items = sscanf(line, "%128s %u %u %u %u %u", name, &r, &g, &b, &a, &t);
-		if(items < 4) {
+		char name[200 + 1] = {0};
+		unsigned int r, g, b, a = 255, t = 0;
+		int items = sscanf(line, "%200s %u %u %u %u %u", name, &r, &g, &b, &a, &t);
+		if (items < 4) {
 			std::cerr << "Failed to parse color entry '" << line << "'" << std::endl;
 			continue;
 		}
@@ -387,33 +360,37 @@ std::set<std::string> TileGenerator::getSupportedBackends()
 	return r;
 }
 
-void TileGenerator::openDb(const std::string &input)
+void TileGenerator::openDb(const std::string &input_path)
 {
+	std::string input = input_path;
+	if (input.back() != PATH_SEPARATOR)
+		input += PATH_SEPARATOR;
+
 	std::string backend = m_backend;
-	if (backend == "") {
-		std::ifstream ifs(input + "/world.mt");
+	if (backend.empty()) {
+		std::ifstream ifs(input + "world.mt");
 		if(!ifs.good())
 			throw std::runtime_error("Failed to open world.mt");
 		backend = read_setting_default("backend", ifs, "sqlite3");
 		ifs.close();
 	}
 
-	if(backend == "sqlite3")
+	if (backend == "sqlite3")
 		m_db = new DBSQLite3(input);
 #if USE_POSTGRESQL
-	else if(backend == "postgresql")
+	else if (backend == "postgresql")
 		m_db = new DBPostgreSQL(input);
 #endif
 #if USE_LEVELDB
-	else if(backend == "leveldb")
+	else if (backend == "leveldb")
 		m_db = new DBLevelDB(input);
 #endif
 #if USE_REDIS
-	else if(backend == "redis")
+	else if (backend == "redis")
 		m_db = new DBRedis(input);
 #endif
 	else
-		throw std::runtime_error(((std::string) "Unknown map backend: ") + backend);
+		throw std::runtime_error(std::string("Unknown map backend: ") + backend);
 
 	// Determine how we're going to traverse the database (heuristic)
 	if (m_exhaustiveSearch == EXH_AUTO) {
@@ -493,7 +470,6 @@ void TileGenerator::createImage()
 	const int scale_d = 40; // pixels reserved for a scale
 	if(!m_drawScale)
 		m_scales = 0;
-
 
 	// If a geometry is explicitly set, set the bounding box to the requested geometry
 	// instead of cropping to the content. This way we will always output a full tile
@@ -861,12 +837,12 @@ void TileGenerator::writeImage(const std::string &output)
 {
 	m_image->save(output);
 	delete m_image;
-	m_image = NULL;
+	m_image = nullptr;
 }
 
 void TileGenerator::printUnknown()
 {
-	if (m_unknownNodes.size() == 0)
+	if (m_unknownNodes.empty())
 		return;
 	std::cerr << "Unknown nodes:" << std::endl;
 	for (const auto &node : m_unknownNodes)

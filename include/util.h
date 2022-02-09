@@ -1,7 +1,19 @@
 #pragma once
 
 #include <string>
-#include <fstream>
+#include <iostream>
+
+template<typename T>
+static inline T mymax(T a, T b)
+{
+	return (a > b) ? a : b;
+}
+
+template<typename T>
+static inline T mymin(T a, T b)
+{
+	return (a > b) ? b : a;
+}
 
 std::string read_setting(const std::string &name, std::istream &is);
 

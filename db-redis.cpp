@@ -20,7 +20,6 @@ static inline int64_t stoi64(const std::string &s)
 	return t;
 }
 
-
 static inline std::string i64tos(int64_t i)
 {
 	std::ostringstream os;
@@ -28,10 +27,11 @@ static inline std::string i64tos(int64_t i)
 	return os.str();
 }
 
+
 DBRedis::DBRedis(const std::string &mapdir)
 {
-	std::ifstream ifs((mapdir + "/world.mt").c_str());
-	if(!ifs.good())
+	std::ifstream ifs(mapdir + "world.mt");
+	if (!ifs.good())
 		throw std::runtime_error("Failed to read world.mt");
 	std::string tmp;
 
@@ -40,12 +40,16 @@ DBRedis::DBRedis(const std::string &mapdir)
 	hash = read_setting("redis_hash", ifs);
 	ifs.seekg(0);
 
-	const char *addr = tmp.c_str();
-	int port = stoi64(read_setting_default("redis_port", ifs, "6379"));
-	ctx = tmp.find('/') != std::string::npos ? redisConnectUnix(addr) : redisConnect(addr, port);
-	if(!ctx) {
+	if (tmp.find('/') != std::string::npos) {
+		ctx = redisConnectUnix(tmp.c_str());
+	} else {
+		int port = stoi64(read_setting_default("redis_port", ifs, "6379"));
+		ctx = redisConnect(tmp.c_str(), port);
+	}
+
+	if (!ctx) {
 		throw std::runtime_error("Cannot allocate redis context");
-	} else if(ctx->err) {
+	} else if (ctx->err) {
 		std::string err = std::string("Connection error: ") + ctx->errstr;
 		redisFree(ctx);
 		throw std::runtime_error(err);
@@ -82,8 +86,9 @@ std::vector<BlockPos> DBRedis::getBlockPos(BlockPos min, BlockPos max)
 }
 
 
-const char *DBRedis::replyTypeStr(int type) {
-	switch(type) {
+const char *DBRedis::replyTypeStr(int type)
+{
+	switch (type) {
 		case REDIS_REPLY_STATUS:
 			return "REDIS_REPLY_STATUS";
 		case REDIS_REPLY_ERROR:
@@ -97,7 +102,7 @@ const char *DBRedis::replyTypeStr(int type) {
 		case REDIS_REPLY_ARRAY:
 			return "REDIS_REPLY_ARRAY";
 		default:
-			return "unknown";
+			return "(unknown)";
 	}
 }
 
@@ -106,12 +111,12 @@ void DBRedis::loadPosCache()
 {
 	redisReply *reply;
 	reply = (redisReply*) redisCommand(ctx, "HKEYS %s", hash.c_str());
-	if(!reply)
+	if (!reply)
 		throw std::runtime_error("Redis command HKEYS failed");
-	if(reply->type != REDIS_REPLY_ARRAY)
+	if (reply->type != REDIS_REPLY_ARRAY)
 		REPLY_TYPE_ERR(reply, "HKEYS reply");
-	for(size_t i = 0; i < reply->elements; i++) {
-		if(reply->element[i]->type != REDIS_REPLY_STRING)
+	for (size_t i = 0; i < reply->elements; i++) {
+		if (reply->element[i]->type != REDIS_REPLY_STRING)
 			REPLY_TYPE_ERR(reply->element[i], "HKEYS subreply");
 		BlockPos pos = decodeBlockPos(stoi64(reply->element[i]->str));
 		posCache[pos.z].emplace_back(pos.x, pos.y);
@@ -128,25 +133,24 @@ void DBRedis::HMGET(const std::vector<BlockPos> &positions,
 	argv[0] = "HMGET";
 	argv[1] = hash.c_str();
 
-	std::vector<BlockPos>::const_iterator position = positions.begin();
-	std::size_t remaining = positions.size();
-	std::size_t abs_i = 0;
+	auto position = positions.begin();
+	size_t remaining = positions.size();
+	size_t abs_i = 0;
 	while (remaining > 0) {
-		const std::size_t batch_size =
-			(remaining > DB_REDIS_HMGET_NUMFIELDS) ? DB_REDIS_HMGET_NUMFIELDS : remaining;
+		const size_t batch_size = mymin<size_t>(DB_REDIS_HMGET_NUMFIELDS, remaining);
 
 		redisReply *reply;
 		{
 			// storage to preserve validity of .c_str()
 			std::string keys[batch_size];
-			for (std::size_t i = 0; i < batch_size; ++i) {
+			for (size_t i = 0; i < batch_size; ++i) {
 				keys[i] = i64tos(encodeBlockPos(*position++));
 				argv[i+2] = keys[i].c_str();
 			}
 			reply = (redisReply*) redisCommandArgv(ctx, batch_size + 2, argv, NULL);
 		}
 
-		if(!reply)
+		if (!reply)
 			throw std::runtime_error("Redis command HMGET failed");
 		if (reply->type != REDIS_REPLY_ARRAY)
 			REPLY_TYPE_ERR(reply, "HMGET reply");
@@ -154,7 +158,7 @@ void DBRedis::HMGET(const std::vector<BlockPos> &positions,
 			freeReplyObject(reply);
 			throw std::runtime_error("HMGET wrong number of elements");
 		}
-		for (std::size_t i = 0; i < reply->elements; ++i) {
+		for (size_t i = 0; i < reply->elements; ++i) {
 			redisReply *subreply = reply->element[i];
 			if (subreply->type == REDIS_REPLY_NIL)
 				continue;
@@ -162,10 +166,14 @@ void DBRedis::HMGET(const std::vector<BlockPos> &positions,
 				REPLY_TYPE_ERR(subreply, "HMGET subreply");
 			if (subreply->len == 0)
 				throw std::runtime_error("HMGET empty string");
-			result(abs_i + i, ustring((const unsigned char *) subreply->str, subreply->len));
+			result(abs_i + i, ustring(
+				reinterpret_cast<const unsigned char*>(subreply->str),
+				subreply->len
+			));
 		}
 		freeReplyObject(reply);
-		abs_i += reply->elements;
+
+		abs_i += batch_size;
 		remaining -= batch_size;
 	}
 }

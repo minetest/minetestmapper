@@ -26,11 +26,10 @@ static inline int color2int(const Color &c)
 static inline Color int2color(int c)
 {
 	Color c2;
-	u8 a;
 	c2.b = c & 0xff;
 	c2.g = (c >> 8) & 0xff;
 	c2.r = (c >> 16) & 0xff;
-	a = (c >> 24) & 0xff;
+	u8 a = (c >> 24) & 0xff;
 	c2.a = 255 - (a*255 / gdAlphaMax);
 	return c2;
 }
@@ -55,7 +54,7 @@ static inline void check_bounds(int x, int y, int width, int height)
 
 
 Image::Image(int width, int height) :
-	m_width(width), m_height(height), m_image(NULL)
+	m_width(width), m_height(height), m_image(nullptr)
 {
 	SIZECHECK(0, 0);
 	m_image = gdImageCreateTrueColor(m_width, m_height);

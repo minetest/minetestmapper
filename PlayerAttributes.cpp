@@ -22,14 +22,14 @@ PlayerAttributes::PlayerAttributes(const std::string &worldDir)
 	else if (backend == "sqlite3")
 		readSqlite(worldDir + "players.sqlite");
 	else
-		throw std::runtime_error(((std::string) "Unknown player backend: ") + backend);
+		throw std::runtime_error(std::string("Unknown player backend: ") + backend);
 }
 
 void PlayerAttributes::readFiles(const std::string &playersPath)
 {
 	DIR *dir;
 	dir = opendir (playersPath.c_str());
-	if (dir == NULL)
+	if (!dir)
 		return;
 
 	struct dirent *ent;
@@ -37,9 +37,8 @@ void PlayerAttributes::readFiles(const std::string &playersPath)
 		if (ent->d_name[0] == '.')
 			continue;
 
-		std::string path = playersPath + PATH_SEPARATOR + ent->d_name;
-		std::ifstream in(path);
-		if(!in.good())
+		std::ifstream in(playersPath + PATH_SEPARATOR + ent->d_name);
+		if (!in.good())
 			continue;
 
 		std::string name, position;
@@ -57,16 +56,17 @@ void PlayerAttributes::readFiles(const std::string &playersPath)
 		iss >> tmp; // ','
 		iss >> player.z;
 		iss >> tmp; // ')'
-		if(tmp != ')')
+		if (tmp != ')')
 			continue;
 		player.name = name;
 
-		player.x /= 10.0;
-		player.y /= 10.0;
-		player.z /= 10.0;
+		player.x /= 10.0f;
+		player.y /= 10.0f;
+		player.z /= 10.0f;
 
 		m_players.push_back(player);
 	}
+
 	closedir(dir);
 }
 
@@ -101,14 +101,14 @@ void PlayerAttributes::readSqlite(const std::string &db_name)
 
 		Player player;
 		const unsigned char *name_ = sqlite3_column_text(stmt_get_player_pos, 0);
-		player.name = std::string(reinterpret_cast<const char*>(name_));
+		player.name = reinterpret_cast<const char*>(name_);
 		player.x = sqlite3_column_double(stmt_get_player_pos, 1);
 		player.y = sqlite3_column_double(stmt_get_player_pos, 2);
 		player.z = sqlite3_column_double(stmt_get_player_pos, 3);
 
-		player.x /= 10.0;
-		player.y /= 10.0;
-		player.z /= 10.0;
+		player.x /= 10.0f;
+		player.y /= 10.0f;
+		player.z /= 10.0f;
 
 		m_players.push_back(player);
 	}

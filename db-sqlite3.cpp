@@ -151,7 +151,7 @@ void DBSQLite3::getBlocksOnXZ(BlockList &blocks, int16_t x, int16_t z,
 		 * because it's bad for performance. But rather than silently breaking
 		 * do the right thing and load the blocks again. */
 #ifndef NDEBUG
-		std::cout << "Warning: suboptimal access pattern for sqlite3 backend" << std::endl;
+		std::cerr << "Warning: suboptimal access pattern for sqlite3 backend" << std::endl;
 #endif
 		loadBlockCache(z);
 	}

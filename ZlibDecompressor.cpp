@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "ZlibDecompressor.h"
 
-ZlibDecompressor::ZlibDecompressor(const unsigned char *data, std::size_t size):
+ZlibDecompressor::ZlibDecompressor(const u8 *data, size_t size):
 	m_data(data),
 	m_seekPos(0),
 	m_size(size)
@@ -13,12 +13,12 @@ ZlibDecompressor::~ZlibDecompressor()
 {
 }
 
-void ZlibDecompressor::setSeekPos(std::size_t seekPos)
+void ZlibDecompressor::setSeekPos(size_t seekPos)
 {
 	m_seekPos = seekPos;
 }
 
-std::size_t ZlibDecompressor::seekPos() const
+size_t ZlibDecompressor::seekPos() const
 {
 	return m_seekPos;
 }
@@ -26,7 +26,7 @@ std::size_t ZlibDecompressor::seekPos() const
 ustring ZlibDecompressor::decompress()
 {
 	const unsigned char *data = m_data + m_seekPos;
-	const std::size_t size = m_size - m_seekPos;
+	const size_t size = m_size - m_seekPos;
 
 	ustring buffer;
 	constexpr size_t BUFSIZE = 128 * 1024;
@@ -54,7 +54,7 @@ ustring ZlibDecompressor::decompress()
 		throw DecompressError();
 
 	m_seekPos += strm.next_in - data;
-	(void)inflateEnd(&strm);
+	(void) inflateEnd(&strm);
 
 	return buffer;
 }

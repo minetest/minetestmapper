@@ -4,8 +4,6 @@
 #define PATH_SEPARATOR '/'
 #endif
 
-#define BLOCK_SIZE 16
-
 #ifdef USE_CMAKE_CONFIG_H
 #include "cmake_config.h"
 #else

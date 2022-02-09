@@ -16,6 +16,5 @@ public:
 
 private:
 	const u8 *m_data;
-	size_t m_seekPos;
-	size_t m_size;
+	size_t m_seekPos, m_size;
 };

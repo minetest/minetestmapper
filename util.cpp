@@ -3,15 +3,15 @@
 
 #include "util.h"
 
-static inline std::string trim(const std::string &s)
+static std::string trim(const std::string &s)
 {
 	auto isspace = [] (char c) -> bool { return c == ' ' || c == '\t' || c == '\r' || c == '\n'; };
 
 	size_t front = 0;
-	while(isspace(s[front]))
+	while (isspace(s[front]))
 		++front;
 	size_t back = s.size() - 1;
-	while(back > front && isspace(s[back]))
+	while (back > front && isspace(s[back]))
 		--back;
 
 	return s.substr(front, back - front + 1);
@@ -23,7 +23,7 @@ std::string read_setting(const std::string &name, std::istream &is)
 	while (is.good()) {
 		is.getline(linebuf, sizeof(linebuf));
 
-		for(char *p = linebuf; *p; p++) {
+		for (char *p = linebuf; *p; p++) {
 			if(*p != '#')
 				continue;
 			*p = '\0'; // Cut off at the first #

@@ -5,7 +5,7 @@
 
 static inline int64_t stoi64(const std::string &s)
 {
-	std::stringstream tmp(s);
+	std::istringstream tmp(s);
 	int64_t t;
 	tmp >> t;
 	return t;

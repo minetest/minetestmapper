@@ -57,28 +57,36 @@ static void usage()
 	printf("\n");
 }
 
-static bool file_exists(const std::string &path)
+static inline bool file_exists(const std::string &path)
 {
 	std::ifstream ifs(path);
 	return ifs.is_open();
 }
 
+static inline int stoi(const char *s)
+{
+	std::istringstream iss(s);
+	int ret;
+	iss >> ret;
+	return ret;
+}
+
 static std::string search_colors(const std::string &worldpath)
 {
-	if(file_exists(worldpath + "/colors.txt"))
+	if (file_exists(worldpath + "/colors.txt"))
 		return worldpath + "/colors.txt";
 
 #ifndef _WIN32
 	char *home = std::getenv("HOME");
-	if(home) {
-		std::string check = ((std::string) home) + "/.minetest/colors.txt";
-		if(file_exists(check))
+	if (home) {
+		std::string check = std::string(home) + "/.minetest/colors.txt";
+		if (file_exists(check))
 			return check;
 	}
 #endif
 
 	constexpr bool sharedir_valid = !(SHAREDIR[0] == '.' || SHAREDIR[0] == '\0');
-	if(sharedir_valid && file_exists(SHAREDIR "/colors.txt"))
+	if (sharedir_valid && file_exists(SHAREDIR "/colors.txt"))
 		return SHAREDIR "/colors.txt";
 
 	std::cerr << "Warning: Falling back to using colors.txt from current directory." << std::endl;
@@ -171,19 +179,11 @@ int main(int argc, char *argv[])
 			case 'd':
 				generator.setBackend(optarg);
 				break;
-			case 'a': {
-					std::istringstream iss(optarg);
-					int miny;
-					iss >> miny;
-					generator.setMinY(miny);
-				}
+			case 'a':
+				generator.setMinY(stoi(optarg));
 				break;
-			case 'c': {
-					std::istringstream iss(optarg);
-					int maxy;
-					iss >> maxy;
-					generator.setMaxY(maxy);
-				}
+			case 'c':
+				generator.setMaxY(stoi(optarg));
 				break;
 			case 'g': {
 					std::istringstream geometry(optarg);
@@ -199,23 +199,19 @@ int main(int argc, char *argv[])
 				break;
 			case 'f': {
 					uint flags = 0;
-					if(strchr(optarg, 't') != NULL)
+					if (strchr(optarg, 't'))
 						flags |= SCALE_TOP;
-					if(strchr(optarg, 'b') != NULL)
+					if (strchr(optarg, 'b'))
 						flags |= SCALE_BOTTOM;
-					if(strchr(optarg, 'l') != NULL)
+					if (strchr(optarg, 'l'))
 						flags |= SCALE_LEFT;
-					if(strchr(optarg, 'r') != NULL)
+					if (strchr(optarg, 'r'))
 						flags |= SCALE_RIGHT;
 					generator.setScales(flags);
 				}
 				break;
-			case 'z': {
-					std::istringstream iss(optarg);
-					int zoom;
-					iss >> zoom;
-					generator.setZoom(zoom);
-				}
+			case 'z':
+				generator.setZoom(stoi(optarg));
 				break;
 			case 'C':
 				colors = optarg;
@@ -224,15 +220,13 @@ int main(int argc, char *argv[])
 				generator.setDontWriteEmpty(true);
 				break;
 			case 'j': {
-					int mode;
+					int mode = EXH_AUTO;;
 					if (!strcmp(optarg, "never"))
 						mode = EXH_NEVER;
 					else if (!strcmp(optarg, "y"))
 						mode = EXH_Y;
 					else if (!strcmp(optarg, "full"))
 						mode = EXH_FULL;
-					else
-						mode = EXH_AUTO;
 					generator.setExhaustiveSearch(mode);
 				}
 				break;
@@ -267,7 +261,7 @@ int main(int argc, char *argv[])
 			return 0;
 		}
 
-		if(colors == "")
+		if(colors.empty())
 			colors = search_colors(input);
 		generator.parseColorsFile(colors);
 		generator.generate(input, output);

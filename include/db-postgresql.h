@@ -21,7 +21,7 @@ protected:
 	PGresult *execPrepared(
 		const char *stmtName, const int paramsNumber,
 		const void **params,
-		const int *paramsLengths = NULL, const int *paramsFormats = NULL,
+		const int *paramsLengths = nullptr, const int *paramsFormats = nullptr,
 		bool clear = true
 	);
 	int pg_binary_to_int(PGresult *res, int row, int col);

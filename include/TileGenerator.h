@@ -4,7 +4,6 @@
 #include <map>
 #include <set>
 #include <unordered_map>
-#include <unordered_set>
 #include <cstdint>
 #include <string>
 
@@ -66,7 +65,6 @@ class TileGenerator
 {
 private:
 	typedef std::unordered_map<std::string, ColorEntry> ColorMap;
-	typedef std::unordered_set<std::string> NameSet;
 
 public:
 	TileGenerator();
@@ -154,7 +152,7 @@ private:
 	ColorMap m_colorMap;
 	BitmapThing m_readPixels;
 	BitmapThing m_readInfo;
-	NameSet m_unknownNodes;
+	std::set<std::string> m_unknownNodes;
 	Color m_color[16][16];
 	uint8_t m_thickness[16][16];
 

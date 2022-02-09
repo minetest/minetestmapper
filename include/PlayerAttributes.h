@@ -6,7 +6,7 @@
 struct Player
 {
 	std::string name;
-	double x, y, z;
+	float x, y, z;
 };
 
 class PlayerAttributes
