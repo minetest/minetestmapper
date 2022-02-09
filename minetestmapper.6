@@ -77,7 +77,7 @@ Use specific map backend; supported: \fIsqlite3\fP, \fIleveldb\fP, \fIredis\fP, 
 Limit area to specific geometry (\fIx:y+w+h\fP where x and y specify the lower left corner), e.g. "--geometry -800:-800+1600+1600"
 
 .TP
-.BR \-\-extent " " \fIextent\fR
+.BR \-\-extent
 Don't render the image, just print the extent of the map that would be generated, in the same format as the geometry above.
 
 .TP
@@ -93,7 +93,7 @@ Forcefully set path to colors.txt file (it's autodetected otherwise), e.g. "--co
 Draw scales on specified image edges (letters \fIt b l r\fP meaning top, bottom, left and right), e.g. "--scales tbr"
 
 .TP
-.BR \-\-exhaustive " \fImode\fR
+.BR \-\-exhaustive " " \fImode\fR
 Select if database should be traversed exhaustively or using range queries, available: \fInever\fP, \fIy\fP, \fIfull\fP, \fIauto\fP
 
 Defaults to \fIauto\fP. You shouldn't need to change this, but doing so can improve rendering times on large maps.
@@ -102,6 +102,10 @@ For these optimizations to work it is important that you set
 and
 .B max-y
 when you don't care about the world below e.g. -60 and above 1000 nodes.
+
+.TP
+.BR \-\-dumpblock " " \fIpos\fR
+Instead of rendering anything try to load the block at the given position (\fIx,y,z\fR) and print its raw data as hexadecimal.
 
 .SH MORE INFORMATION
 Website: https://github.com/minetest/minetestmapper

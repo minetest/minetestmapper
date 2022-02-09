@@ -35,6 +35,7 @@ static void usage()
 		{"--colors", "<colors.txt>"},
 		{"--scales", "[t][b][l][r]"},
 		{"--exhaustive", "never|y|full|auto"},
+		{"--dumpblock", "x,y,z"},
 	};
 	const char *top_text =
 		"minetestmapper -i <world_path> -o <output_image.png> [options]\n"
@@ -110,15 +111,17 @@ int main(int argc, char *argv[])
 		{"scales", required_argument, 0, 'f'},
 		{"noemptyimage", no_argument, 0, 'n'},
 		{"exhaustive", required_argument, 0, 'j'},
+		{"dumpblock", required_argument, 0, 'k'},
 		{0, 0, 0, 0}
 	};
 
 	std::string input;
 	std::string output;
-	std::string colors = "";
+	std::string colors;
+	bool onlyPrintExtent = false;
+	BlockPos dumpblock(INT16_MIN);
 
 	TileGenerator generator;
-	bool onlyPrintExtent = false;
 	while (1) {
 		int option_index;
 		int c = getopt_long(argc, argv, "hi:o:", long_options, &option_index);
@@ -129,7 +132,6 @@ int main(int argc, char *argv[])
 			case 'h':
 				usage();
 				return 0;
-				break;
 			case 'i':
 				input = optarg;
 				break;
@@ -234,12 +236,23 @@ int main(int argc, char *argv[])
 					generator.setExhaustiveSearch(mode);
 				}
 				break;
+			case 'k': {
+				std::istringstream iss(optarg);
+				char c, c2;
+				iss >> dumpblock.x >> c >> dumpblock.y >> c2 >> dumpblock.z;
+				if (iss.fail() || c != ',' || c2 != ',') {
+					usage();
+					exit(1);
+				}
+				break;
+			}
 			default:
 				exit(1);
 		}
 	}
 
-	if (input.empty() || (!onlyPrintExtent && output.empty())) {
+	const bool need_output = !onlyPrintExtent && dumpblock.x == INT16_MIN;
+	if (input.empty() || (need_output && output.empty())) {
 		usage();
 		return 0;
 	}
@@ -249,6 +262,9 @@ int main(int argc, char *argv[])
 		if (onlyPrintExtent) {
 			generator.printGeometry(input);
 			return 0;
+		} else if (dumpblock.x != INT16_MIN) {
+			generator.dumpBlock(input, dumpblock);
+			return 0;
 		}
 
 		if(colors == "")
@@ -256,7 +272,7 @@ int main(int argc, char *argv[])
 		generator.parseColorsFile(colors);
 		generator.generate(input, output);
 
-	} catch (const std::runtime_error &e) {
+	} catch (const std::exception &e) {
 		std::cerr << "Exception: " << e.what() << std::endl;
 		return 1;
 	}

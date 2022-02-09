@@ -254,6 +254,11 @@ void TileGenerator::setExhaustiveSearch(int mode)
 	m_exhaustiveSearch = mode;
 }
 
+void TileGenerator::setDontWriteEmpty(bool f)
+{
+	m_dontWriteEmpty = f;
+}
+
 void TileGenerator::parseColorsFile(const std::string &fileName)
 {
 	std::ifstream in(fileName);
@@ -265,9 +270,8 @@ void TileGenerator::parseColorsFile(const std::string &fileName)
 void TileGenerator::printGeometry(const std::string &input)
 {
 	std::string input_path = input;
-	if (input_path[input.length() - 1] != PATH_SEPARATOR) {
+	if (input_path.back() != PATH_SEPARATOR)
 		input_path += PATH_SEPARATOR;
-	}
 
 	setExhaustiveSearch(EXH_NEVER);
 	openDb(input_path);
@@ -283,17 +287,33 @@ void TileGenerator::printGeometry(const std::string &input)
 
 }
 
-void TileGenerator::setDontWriteEmpty(bool f)
+void TileGenerator::dumpBlock(const std::string &input, BlockPos pos)
 {
-	m_dontWriteEmpty = f;
+	std::string input_path = input;
+	if (input_path.back() != PATH_SEPARATOR)
+		input_path += PATH_SEPARATOR;
+
+	openDb(input_path);
+
+	BlockList list;
+	std::vector<BlockPos> positions;
+	positions.emplace_back(pos);
+	m_db->getBlocksByPos(list, positions);
+	if (!list.empty()) {
+		const ustring &data = list.begin()->second;
+		for (u8 c : data)
+			printf("%02x", static_cast<int>(c));
+		printf("\n");
+	}
+
+	closeDatabase();
 }
 
 void TileGenerator::generate(const std::string &input, const std::string &output)
 {
 	std::string input_path = input;
-	if (input_path[input.length() - 1] != PATH_SEPARATOR) {
+	if (input_path.back() != PATH_SEPARATOR)
 		input_path += PATH_SEPARATOR;
-	}
 
 	if (m_dontWriteEmpty) // FIXME: possible too, just needs to be done differently
 		setExhaustiveSearch(EXH_NEVER);

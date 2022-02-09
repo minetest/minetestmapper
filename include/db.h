@@ -13,6 +13,7 @@ struct BlockPos {
 	int16_t z;
 
 	BlockPos() : x(0), y(0), z(0) {}
+	explicit BlockPos(int16_t v) : x(v), y(v), z(v) {}
 	BlockPos(int16_t x, int16_t y, int16_t z) : x(x), y(y), z(z) {}
 
 	// Implements the inverse ordering so that (2,2,2) < (1,1,1)

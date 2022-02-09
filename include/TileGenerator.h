@@ -92,6 +92,8 @@ public:
 
 	void generate(const std::string &input, const std::string &output);
 	void printGeometry(const std::string &input);
+	void dumpBlock(const std::string &input, BlockPos pos);
+
 	static std::set<std::string> getSupportedBackends();
 
 private:
