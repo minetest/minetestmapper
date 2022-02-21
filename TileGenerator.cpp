@@ -817,9 +817,13 @@ void TileGenerator::renderOrigin()
 	m_image->drawCircle(getImageX(0, true), getImageY(0, true), 12, m_originColor);
 }
 
-void TileGenerator::renderPlayers(const std::string &inputPath)
+void TileGenerator::renderPlayers(const std::string &input_path)
 {
-	PlayerAttributes players(inputPath);
+	std::string input = input_path;
+	if (input.back() != PATH_SEPARATOR)
+		input += PATH_SEPARATOR;
+
+	PlayerAttributes players(input);
 	for (auto &player : players) {
 		if (player.x < m_xMin * 16 || player.x > m_xMax * 16 ||
 			player.z < m_zMin * 16 || player.z > m_zMax * 16)
