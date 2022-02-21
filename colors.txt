@@ -10,7 +10,7 @@ bones:bones 117 117 117
 # butterflies
 
 # carts
-carts:brakerail 138 121 102
+carts:brakerail 150 121 102
 carts:powerrail 160 145 102
 carts:rail 146 128 108
 
@@ -117,7 +117,11 @@ default:marram_grass_1 113 139 96
 default:marram_grass_2 102 131 90
 default:marram_grass_3 99 130 88
 default:mese 222 222 0
-default:mese_post_light 134 105 59
+default:mese_post_light 132 103 57
+default:mese_post_light_acacia_wood 151 62 39
+default:mese_post_light_aspen_wood 210 199 170
+default:mese_post_light_junglewood 57 39 14
+default:mese_post_light_pine_wood 221 185 131
 default:meselamp 213 215 143
 default:mossycobble 88 91 73
 default:obsidian 21 24 29
@@ -174,12 +178,20 @@ default:wood 131 102 57
 # doors
 doors:door_glass_a 245 245 245 64 16
 doors:door_glass_b 245 245 245 64 16
+doors:door_glass_c 245 245 245 64 16
+doors:door_glass_d 245 245 245 64 16
 doors:door_obsidian_glass_a 48 49 50 64 16
 doors:door_obsidian_glass_b 48 49 50 64 16
+doors:door_obsidian_glass_c 48 49 50 64 16
+doors:door_obsidian_glass_d 48 49 50 64 16
 doors:door_steel_a 203 203 203
 doors:door_steel_b 203 203 203
+doors:door_steel_c 203 203 203
+doors:door_steel_d 203 203 203
 doors:door_wood_a 89 68 37
 doors:door_wood_b 89 68 37
+doors:door_wood_c 89 68 37
+doors:door_wood_d 89 68 37
 doors:gate_acacia_wood_closed 150 61 39
 doors:gate_acacia_wood_open 150 61 39
 doors:gate_aspen_wood_closed 210 199 170
@@ -204,6 +216,7 @@ farming:cotton_5 116 105 53
 farming:cotton_6 121 95 59
 farming:cotton_7 94 70 37
 farming:cotton_8 122 108 93
+farming:cotton_wild 111 111 101
 farming:desert_sand_soil 161 132 72
 farming:desert_sand_soil_wet 120 99 53
 farming:dry_soil 178 136 90
@@ -432,6 +445,8 @@ xpanes:bar 114 114 114 64 16
 xpanes:bar_flat 114 114 114 64 16
 xpanes:door_steel_bar_a 133 133 133 64 16
 xpanes:door_steel_bar_b 133 133 133 64 16
+xpanes:door_steel_bar_c 133 133 133 64 16
+xpanes:door_steel_bar_d 133 133 133 64 16
 xpanes:obsidian_pane 16 17 18 64 16
 xpanes:obsidian_pane_flat 16 17 18 64 16
 xpanes:pane 249 249 249 64 16
