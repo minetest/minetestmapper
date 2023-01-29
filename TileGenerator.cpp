@@ -426,7 +426,7 @@ void TileGenerator::closeDatabase()
 	m_db = NULL;
 }
 
-int16_t mod16(int16_t y)
+static inline int16_t mod16(int16_t y)
 {
 	if (y < 0)
 		return (y - 15) / 16;
