@@ -4,7 +4,8 @@ install_linux_deps() {
 	local pkgs=(cmake libgd-dev libsqlite3-dev libleveldb-dev libpq-dev libhiredis-dev libzstd-dev)
 
 	sudo apt-get update
-	sudo apt-get install -y --no-install-recommends ${pkgs[@]} "$@"
+	sudo apt-get remove -y 'libgd3' nginx || : # ????
+	sudo apt-get install -y --no-install-recommends "${pkgs[@]}" "$@"
 }
 
 run_build() {

@@ -7,19 +7,21 @@ on:
       - '**.[ch]'
       - '**.cpp'
       - '**/CMakeLists.txt'
+      - 'util/ci/**'
       - '.github/workflows/**.yml'
   pull_request:
     paths:
       - '**.[ch]'
       - '**.cpp'
       - '**/CMakeLists.txt'
+      - 'util/ci/**'
       - '.github/workflows/**.yml'
 
 jobs:
   gcc:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install deps
         run: |
           source util/ci/script.sh
@@ -41,7 +43,7 @@ jobs:
   clang:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install deps
         run: |
           source util/ci/script.sh
