@@ -426,19 +426,27 @@ void TileGenerator::closeDatabase()
 	m_db = NULL;
 }
 
+static inline int16_t mod16(int16_t y)
+{
+	if (y < 0)
+		return (y - 15) / 16;
+	return y / 16;
+}
+
 void TileGenerator::loadBlocks()
 {
-	const int16_t yMax = m_yMax / 16 + 1;
+	const int16_t yMax = mod16(m_yMax) + 1;
+	const int16_t yMin = mod16(m_yMin);
 
 	if (m_exhaustiveSearch == EXH_NEVER || m_exhaustiveSearch == EXH_Y) {
 		std::vector<BlockPos> vec = m_db->getBlockPos(
-			BlockPos(m_geomX, m_yMin / 16, m_geomY),
+			BlockPos(m_geomX, yMin, m_geomY),
 			BlockPos(m_geomX2, yMax, m_geomY2)
 		);
 
 		for (auto pos : vec) {
 			assert(pos.x >= m_geomX && pos.x < m_geomX2);
-			assert(pos.y >= m_yMin / 16 && pos.y < yMax);
+			assert(pos.y >= yMin && pos.y < yMax);
 			assert(pos.z >= m_geomY && pos.z < m_geomY2);
 
 			// Adjust minimum and maximum positions to the nearest block
@@ -512,7 +520,8 @@ void TileGenerator::createImage()
 void TileGenerator::renderMap()
 {
 	BlockDecoder blk;
-	const int16_t yMax = m_yMax / 16 + 1;
+	const int16_t yMax = mod16(m_yMax) + 1;
+	const int16_t yMin = mod16(m_yMin);
 	size_t count = 0;
 
 	auto renderSingle = [&] (int16_t xPos, int16_t zPos, BlockList &blockStack) {
@@ -529,7 +538,7 @@ void TileGenerator::renderMap()
 		for (const auto &it : blockStack) {
 			const BlockPos pos = it.first;
 			assert(pos.x == xPos && pos.z == zPos);
-			assert(pos.y >= m_yMin / 16 && pos.y < yMax);
+			assert(pos.y >= yMin && pos.y < yMax);
 
 			blk.reset();
 			blk.decode(it.second);
@@ -557,7 +566,7 @@ void TileGenerator::renderMap()
 				int16_t xPos = *it2;
 
 				BlockList blockStack;
-				m_db->getBlocksOnXZ(blockStack, xPos, zPos, m_yMin / 16, yMax);
+				m_db->getBlocksOnXZ(blockStack, xPos, zPos, yMin, yMax);
 				blockStack.sort();
 
 				renderSingle(xPos, zPos, blockStack);
@@ -568,17 +577,17 @@ void TileGenerator::renderMap()
 	} else if (m_exhaustiveSearch == EXH_Y) {
 #ifndef NDEBUG
 		std::cerr << "Exhaustively searching height of "
-			<< (yMax - (m_yMin / 16)) << " blocks" << std::endl;
+			<< (yMax - yMin) << " blocks" << std::endl;
 #endif
 		std::vector<BlockPos> positions;
-		positions.reserve(yMax - (m_yMin / 16));
+		positions.reserve(yMax - yMin);
 		for (auto it = m_positions.rbegin(); it != m_positions.rend(); ++it) {
 			int16_t zPos = it->first;
 			for (auto it2 = it->second.rbegin(); it2 != it->second.rend(); ++it2) {
 				int16_t xPos = *it2;
 
 				positions.clear();
-				for (int16_t yPos = m_yMin / 16; yPos < yMax; yPos++)
+				for (int16_t yPos = yMin; yPos < yMax; yPos++)
 					positions.emplace_back(xPos, yPos, zPos);
 
 				BlockList blockStack;
@@ -591,7 +600,7 @@ void TileGenerator::renderMap()
 			postRenderRow(zPos);
 		}
 	} else if (m_exhaustiveSearch == EXH_FULL) {
-		const size_t span_y = yMax - (m_yMin / 16);
+		const size_t span_y = yMax - yMin;
 		m_progressMax = (m_geomX2 - m_geomX) * span_y * (m_geomY2 - m_geomY);
 #ifndef NDEBUG
 		std::cerr << "Exhaustively searching "
@@ -604,7 +613,7 @@ void TileGenerator::renderMap()
 		for (int16_t zPos = m_geomY2 - 1; zPos >= m_geomY; zPos--) {
 			for (int16_t xPos = m_geomX2 - 1; xPos >= m_geomX; xPos--) {
 				positions.clear();
-				for (int16_t yPos = m_yMin / 16; yPos < yMax; yPos++)
+				for (int16_t yPos = yMin; yPos < yMax; yPos++)
 					positions.emplace_back(xPos, yPos, zPos);
 
 				BlockList blockStack;
