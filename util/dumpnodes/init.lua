@@ -1,7 +1,7 @@
 local function get_tile(tiles, n)
 	local tile = tiles[n]
 	if type(tile) == 'table' then
-		return tile.name
+		return tile.name or tile.image
 	end
 	return tile
 end
