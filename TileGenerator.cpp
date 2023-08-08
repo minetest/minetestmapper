@@ -43,6 +43,8 @@ inline T sat_mul(T a, T b)
 		return std::numeric_limits<T>::max();
 	return res;
 #else
+	// WARNING: the fallback implementation is incorrect since we compute ceil(log(x)) not log(x)
+	// but that's good enough for our usecase...
 	const int bits = sizeof(T) * 8;
 	int hb_a = 0, hb_b = 0;
 	for (int i = bits - 1; i >= 0; i--) {
