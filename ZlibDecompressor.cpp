@@ -29,31 +29,39 @@ ustring ZlibDecompressor::decompress()
 	const size_t size = m_size - m_seekPos;
 
 	ustring buffer;
-	constexpr size_t BUFSIZE = 128 * 1024;
-	unsigned char temp_buffer[BUFSIZE];
+	constexpr size_t BUFSIZE = 32 * 1024;
 
 	z_stream strm;
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;
 	strm.opaque = Z_NULL;
 	strm.next_in = Z_NULL;
-	strm.avail_in = size;
+	strm.avail_in = 0;
 
 	if (inflateInit(&strm) != Z_OK)
 		throw DecompressError();
 
 	strm.next_in = const_cast<unsigned char *>(data);
+	strm.avail_in = size;
+	buffer.resize(BUFSIZE);
+	strm.next_out = &buffer[0];
+	strm.avail_out = BUFSIZE;
+
 	int ret = 0;
 	do {
-		strm.avail_out = BUFSIZE;
-		strm.next_out = temp_buffer;
 		ret = inflate(&strm, Z_NO_FLUSH);
-		buffer.append(temp_buffer, BUFSIZE - strm.avail_out);
+		if (strm.avail_out == 0) {
+			const auto off = buffer.size();
+			buffer.reserve(off + BUFSIZE);
+			strm.next_out = &buffer[off];
+			strm.avail_out = BUFSIZE;
+		}
 	} while (ret == Z_OK);
 	if (ret != Z_STREAM_END)
 		throw DecompressError();
 
 	m_seekPos += strm.next_in - data;
+	buffer.resize(buffer.size() - strm.avail_out);
 	(void) inflateEnd(&strm);
 
 	return buffer;
