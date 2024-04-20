@@ -9,8 +9,12 @@ install_linux_deps() {
 }
 
 run_build() {
-	cmake . -DCMAKE_BUILD_TYPE=Debug \
+	local args=(
+		-DCMAKE_BUILD_TYPE=Debug
 		-DENABLE_LEVELDB=1 -DENABLE_POSTGRESQL=1 -DENABLE_REDIS=1
+	)
+	[[ "$CXX" == clang* ]] && args+=(-DCMAKE_CXX_FLAGS="-fsanitize=address")
+	cmake . "${args[@]}"
 
 	make -j2
 }
