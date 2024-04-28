@@ -87,7 +87,8 @@ void Image::drawLine(int x1, int y1, int x2, int y2, const Color &c)
 void Image::drawText(int x, int y, const std::string &s, const Color &c)
 {
 	SIZECHECK(x, y);
-	gdImageString(m_image, gdFontGetMediumBold(), x, y, (unsigned char*) s.c_str(), color2int(c));
+	int brect[8];
+	gdImageStringFT(m_image, &brect[0], color2int(c), "dejavu/DejaVuSans-Bold;freefont/FreeSansBold;msttcorefonts/Arial", 13., 0., x, y, s.c_str());
 }
 
 void Image::drawFilledRect(int x, int y, int w, int h, const Color &c)

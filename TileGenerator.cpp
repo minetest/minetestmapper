@@ -14,6 +14,7 @@
 #include "TileGenerator.h"
 #include "config.h"
 #include "PlayerAttributes.h"
+#include "POIAttributes.h"
 #include "BlockDecoder.h"
 #include "Image.h"
 #include "util.h"
@@ -120,6 +121,7 @@ TileGenerator::TileGenerator():
 	m_scaleColor(0, 0, 0),
 	m_originColor(255, 0, 0),
 	m_playerColor(255, 0, 0),
+	m_poiColor(0, 128, 255),
 	m_drawOrigin(false),
 	m_drawPlayers(false),
 	m_drawScale(false),
@@ -195,6 +197,11 @@ void TileGenerator::setDrawOrigin(bool drawOrigin)
 void TileGenerator::setDrawPlayers(bool drawPlayers)
 {
 	m_drawPlayers = drawPlayers;
+}
+
+void TileGenerator::setDrawPOIs(bool drawPOIs)
+{
+   m_drawPOIs = drawPOIs;
 }
 
 void TileGenerator::setDrawScale(bool drawScale)
@@ -315,6 +322,9 @@ void TileGenerator::generate(const std::string &input_path, const std::string &o
 	}
 	if (m_drawPlayers) {
 		renderPlayers(input_path);
+	}
+	if (m_drawPOIs) {
+	   renderPOIs(input_path);
 	}
 	writeImage(output);
 	printUnknown();
@@ -847,6 +857,27 @@ void TileGenerator::renderPlayers(const std::string &input_path)
 		m_image->drawFilledRect(imageX - 1, imageY, 3, 1, m_playerColor);
 		m_image->drawFilledRect(imageX, imageY - 1, 1, 3, m_playerColor);
 		m_image->drawText(imageX + 2, imageY, player.name, m_playerColor);
+	}
+}
+
+void TileGenerator::renderPOIs(const std::string &input_path)
+{
+	std::string input = input_path;
+	if (input.back() != PATH_SEPARATOR)
+		input += PATH_SEPARATOR;
+
+	POIAttributes pois(input);
+	for (auto &poi : pois) {
+	   if (poi.x < m_xMin * 16 || poi.x > m_xMax * 16 ||
+		 poi.z < m_zMin * 16 || poi.z > m_zMax * 16)
+	      continue;
+	   if (poi.y < m_yMin || poi.y > m_yMax)
+	      continue;
+	   int imageX = getImageX(poi.x, true),
+	       imageY = getImageY(poi.z, true);
+
+	   m_image->drawCircle(imageX, imageY, 9, m_poiColor);
+	   m_image->drawText(imageX + 7, imageY, poi.name, m_poiColor);
 	}
 }
 

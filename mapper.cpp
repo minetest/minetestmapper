@@ -24,6 +24,7 @@ static void usage()
 		{"--drawplayers", ""},
 		{"--draworigin", ""},
 		{"--drawalpha", ""},
+		{"--drawpois", ""},
 		{"--noshading", ""},
 		{"--noemptyimage", ""},
 		{"--min-y", "<y>"},
@@ -108,6 +109,7 @@ int main(int argc, char *argv[])
 		{"drawplayers", no_argument, 0, 'P'},
 		{"drawscale", no_argument, 0, 'S'},
 		{"drawalpha", no_argument, 0, 'e'},
+		{"drawpois", no_argument, 0, 'I'},
 		{"noshading", no_argument, 0, 'H'},
 		{"backend", required_argument, 0, 'd'},
 		{"geometry", required_argument, 0, 'g'},
@@ -169,6 +171,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'e':
 				generator.setDrawAlpha(true);
+				break;
+			case 'I':
+				generator.setDrawPOIs(true);
 				break;
 			case 'E':
 				onlyPrintExtent = true;

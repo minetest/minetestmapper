@@ -79,6 +79,7 @@ public:
 	void setDrawPlayers(bool drawPlayers);
 	void setDrawScale(bool drawScale);
 	void setDrawAlpha(bool drawAlpha);
+	void setDrawPOIs(bool drawPOIs);
 	void setShading(bool shading);
 	void setGeometry(int x, int y, int w, int h);
 	void setMinY(int y);
@@ -109,6 +110,7 @@ private:
 	void renderScale();
 	void renderOrigin();
 	void renderPlayers(const std::string &inputPath);
+	void renderPOIs(const std::string &inputPath);
 	void writeImage(const std::string &output);
 	void printUnknown();
 	void reportProgress(size_t count);
@@ -121,10 +123,12 @@ private:
 	Color m_scaleColor;
 	Color m_originColor;
 	Color m_playerColor;
+	Color m_poiColor;
 	bool m_drawOrigin;
 	bool m_drawPlayers;
 	bool m_drawScale;
 	bool m_drawAlpha;
+	bool m_drawPOIs;
 	bool m_shading;
 	bool m_dontWriteEmpty;
 	std::string m_backend;

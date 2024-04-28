@@ -175,6 +175,7 @@ add_executable(minetestmapper
 	BlockDecoder.cpp
 	PixelAttributes.cpp
 	PlayerAttributes.cpp
+	POIAttributes.cpp
 	TileGenerator.cpp
 	ZlibDecompressor.cpp
 	ZstdDecompressor.cpp
