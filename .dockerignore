@@ -1,0 +1,16 @@
+.git
+.github
+
+*~
+
+minetestmapper
+minetestmapper.exe
+
+CMakeCache.txt
+CMakeFiles/
+CPack*.cmake
+_CPack_Packages/
+install_manifest.txt
+Makefile
+cmake_install.cmake
+cmake_config.h
