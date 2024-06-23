@@ -1,16 +1,14 @@
 ARG DOCKER_IMAGE=alpine:3.19
-FROM $DOCKER_IMAGE AS dev
+FROM $DOCKER_IMAGE AS builder
 
 RUN apk add --no-cache build-base cmake \
 		gd-dev sqlite-dev postgresql-dev hiredis-dev leveldb-dev \
-		ninja ca-certificates
-
-FROM dev as builder
+		ninja
 
 COPY . /usr/src/minetestmapper
 WORKDIR /usr/src/minetestmapper
 
-RUN cmake -B build && \
+RUN cmake -B build -G Ninja && \
     cmake --build build --parallel $(nproc) && \
     cmake --install build
 
@@ -23,5 +21,6 @@ RUN apk add --no-cache libstdc++ libgcc libpq \
 
 COPY --from=builder /usr/local/share/minetest /usr/local/share/minetest
 COPY --from=builder /usr/local/bin/minetestmapper /usr/local/bin/minetestmapper
+COPY COPYING /usr/local/share/minetest/minetestmapper.COPYING
 
 ENTRYPOINT ["/usr/local/bin/minetestmapper"]
