@@ -12,8 +12,6 @@ RUN cmake -B build -G Ninja && \
     cmake --build build --parallel $(nproc) && \
     cmake --install build
 
-RUN ls /usr/local/share/minetest
-
 FROM $DOCKER_IMAGE AS runtime
 
 RUN apk add --no-cache libstdc++ libgcc libpq \
