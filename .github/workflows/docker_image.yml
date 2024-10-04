@@ -83,5 +83,5 @@ jobs:
 
       - name: Test Docker Image
         run: |
-          docker run --rm $(cut -d, -f1 <<<"$DOCKER_METADATA_OUTPUT_TAGS") minetestserver --version
+          docker run --rm $(cut -d, -f1 <<<"$DOCKER_METADATA_OUTPUT_TAGS") minetestmapper --help
         shell: bash
