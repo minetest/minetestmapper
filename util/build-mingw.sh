@@ -7,7 +7,7 @@ variant=win32
 [[ "$(basename "$CXX")" == "x86_64-"* ]] && variant=win64
 
 #######
-# this expects unpacked libraries similar to what Minetest's buildbot uses
+# this expects unpacked libraries similar to what Luanti's buildbot uses
 # $extradlls will typically point to the DLLs for libgcc, libstdc++ and libpng
 libgd_dir=
 zlib_dir=

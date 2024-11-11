@@ -61,8 +61,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           labels: |
-            org.opencontainers.image.title=Minetest Mapper
-            org.opencontainers.image.vendor=Minetest
+            org.opencontainers.image.title=Minetestmapper
+            org.opencontainers.image.vendor=Luanti
             org.opencontainers.image.licenses=BSD 2-Clause
 
       # Build and push Docker image

@@ -1,4 +1,4 @@
-ARG DOCKER_IMAGE=alpine:3.19
+ARG DOCKER_IMAGE=alpine:3.20
 FROM $DOCKER_IMAGE AS builder
 
 RUN apk add --no-cache build-base cmake \
@@ -17,7 +17,7 @@ FROM $DOCKER_IMAGE AS runtime
 RUN apk add --no-cache libstdc++ libgcc libpq \
         gd sqlite-libs postgresql hiredis leveldb
 
-COPY --from=builder /usr/local/share/minetest /usr/local/share/minetest
+COPY --from=builder /usr/local/share/luanti /usr/local/share/luanti
 COPY --from=builder /usr/local/bin/minetestmapper /usr/local/bin/minetestmapper
 COPY COPYING /usr/local/share/minetest/minetestmapper.COPYING
 

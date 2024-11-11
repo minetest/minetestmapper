@@ -15,7 +15,7 @@ local function pairs_s(dict)
 	return ipairs(keys)
 end
 
-minetest.register_chatcommand("dumpnodes", {
+core.register_chatcommand("dumpnodes", {
 	description = "Dump node and texture list for use with minetestmapper",
 	func = function()
 		local ntbl = {}
@@ -30,7 +30,7 @@ minetest.register_chatcommand("dumpnodes", {
 				ntbl[prefix][name] = true
 			end
 		end
-		local out, err = io.open(minetest.get_worldpath() .. "/nodes.txt", 'wb')
+		local out, err = io.open(core.get_worldpath() .. "/nodes.txt", 'wb')
 		if not out then
 			return true, err
 		end
@@ -39,7 +39,7 @@ minetest.register_chatcommand("dumpnodes", {
 			out:write('# ' .. prefix .. '\n')
 			for _, name in pairs_s(ntbl[prefix]) do
 				local nn = prefix .. ":" .. name
-				local nd = minetest.registered_nodes[nn]
+				local nd = core.registered_nodes[nn]
 				local tiles = nd.tiles or nd.tile_images
 				if tiles == nil or nd.drawtype == 'airlike' then
 					print("ignored(2): " .. nn)

@@ -39,7 +39,7 @@ static void usage()
 	};
 	const char *top_text =
 		"minetestmapper -i <world_path> -o <output_image.png> [options]\n"
-		"Generate an overview image of a Minetest map.\n"
+		"Generate an overview image of a Luanti map.\n"
 		"\n"
 		"Options:\n";
 	const char *bottom_text =

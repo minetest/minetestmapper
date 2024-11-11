@@ -4,10 +4,11 @@ Minetest Mapper C++
 .. image:: https://github.com/minetest/minetestmapper/workflows/build/badge.svg
     :target: https://github.com/minetest/minetestmapper/actions/workflows/build.yml
 
-Minetestmapper generates an overview image from a Minetest map.
+Minetestmapper generates an overview image from a Luanti map.
 
-A port of minetestmapper.py to C++ from https://github.com/minetest/minetest/tree/0.4.17/util.
-This version is both faster and provides more features than the now obsolete Python script.
+A port of minetestmapper.py to C++ from `the obsolete Python script
+<https://github.com/minetest/minetest/tree/0.4.17/util>`_.
+This version is both faster and provides more features.
 
 Minetestmapper ships with a colors.txt file for Minetest Game, if you use a different game or have
 many mods installed you should generate a matching colors.txt for better results.
@@ -39,7 +40,7 @@ for Windows:
 Minetestmapper for Windows can be downloaded `from the Releases section
 <https://github.com/minetest/minetestmapper/releases>`_.
 
-After extracting the archive, it can be invoked from cmd.exe:
+After extracting the archive, it can be invoked from cmd.exe or PowerShell:
 ::
 
 	cd C:\Users\yourname\Desktop\example\path
@@ -116,7 +117,7 @@ zoom:
     Apply zoom to drawn nodes by enlarging them to n*n squares, e.g. ``--zoom 4``
 
 colors:
-    Override auto-detected path to colors.txt, e.g. ``--colors ../minetest/mycolors.txt``
+    Override auto-detected path to colors.txt, e.g. ``--colors ../world/mycolors.txt``
 
 scales:
     Draw scales on specified image edges (letters *t b l r* meaning top, bottom, left and right), e.g. ``--scales tbr``

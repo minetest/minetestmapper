@@ -1,6 +1,6 @@
 .TH MINETESTMAPPER 6
 .SH NAME
-minetestmapper \- generate an overview image of a Minetest map
+minetestmapper \- generate an overview image of a Luanti map
 .SH SYNOPSIS
 .B minetestmapper
 \fB\-i\fR \fIworld_path\fR
@@ -9,9 +9,9 @@ minetestmapper \- generate an overview image of a Minetest map
 See additional optional parameters below.
 .SH DESCRIPTION
 .B minetestmapper
-generates an overview image of a minetest map. This is a port of
+generates an overview image of a Luanti map. This is a port of
 the original minetestmapper.py to C++, that is both faster and
-provides more functionality than the deprecated Python script.
+provides more functionality than the obsolete Python script.
 .SH MANDATORY PARAMETERS
 .TP
 .BR \-i " " \fIworld_path\fR
@@ -86,7 +86,7 @@ Zoom the image by using more than one pixel per node, e.g. "--zoom 4"
 
 .TP
 .BR \-\-colors " " \fIpath\fR
-Forcefully set path to colors.txt file (it's autodetected otherwise), e.g. "--colors ../minetest/mycolors.txt"
+Forcefully set path to colors.txt file (autodetected otherwise), e.g. "--colors ../world/mycolors.txt"
 
 .TP
 .BR \-\-scales " " \fIedges\fR

@@ -19,7 +19,7 @@ if(WIN32)
 	set(BINDIR ".")
 	set(DOCDIR ".")
 else()
-	set(SHAREDIR "share/minetest") # reuse Minetest share dir
+	set(SHAREDIR "share/luanti") # reuse engine share dir
 	set(BINDIR "bin")
 	set(DOCDIR "share/doc/${PROJECT_NAME}")
 	set(MANDIR "share/man")
@@ -209,7 +209,7 @@ if(UNIX)
 	install(FILES "minetestmapper.6" DESTINATION "${MANDIR}/man6")
 endif()
 
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Overview mapper for Minetest")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Overview mapper for Luanti")
 set(CPACK_PACKAGE_VENDOR "celeron55")
 set(CPACK_PACKAGE_CONTACT "Perttu Ahola <celeron55@gmail.com>")
 

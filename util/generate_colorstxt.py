@@ -13,14 +13,14 @@ except:
 ############
 ############
 # Instructions for generating a colors.txt file for custom games and/or mods:
-# 1) Add the dumpnodes mod to a Minetest world with the chosen game and mods enabled.
+# 1) Add the dumpnodes mod to a Luanti world with the chosen game and mods enabled.
 # 2) Join ingame and run the /dumpnodes chat command.
 # 3) Run this script and poin it to the installation path of the game using -g,
 #    the path(s) where mods are stored using -m and the nodes.txt in your world folder.
 #    Example command line:
-#      ./util/generate_colorstxt.py --game /usr/share/minetest/games/minetest_game \
+#      ./util/generate_colorstxt.py --game /usr/share/luanti/games/minetest_game \
 #        -m ~/.minetest/mods ~/.minetest/worlds/my_world/nodes.txt
-# 4) Copy the resulting colors.txt file to your world folder or to any other places
+# 4) Copy the resulting colors.txt file to your world folder or to any other place
 #    and use it with minetestmapper's --colors option.
 ###########
 ###########
